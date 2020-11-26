@@ -119,7 +119,7 @@ function init() {
       }
     });
     discord.channels.fetch(bridge.discordChannel).then(async (channel: any) => {
-      await channel.send(``)
+      await channel.send(`[QQ] ${msg.sender.nickname}`);
       for (const msg of send) {
         await channel.send(msg);
       }
