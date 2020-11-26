@@ -35,3 +35,12 @@ bridges: [
 npm install
 npm start
 ```
+
+
+### 文档相关
+https://discordjs.guide/#before-you-begin
+
+### 计划
+1.
+qq图片的mime类型获取,现在是写死了名字`attr.setName('temp.png');`
+https://blog.csdn.net/h13783313210/article/details/79250685

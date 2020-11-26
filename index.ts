@@ -1,7 +1,10 @@
-import {App} from 'koishi';
+import {App, CQCode} from 'koishi';
 import 'koishi-adapter-cqhttp';
+import * as fs from 'fs';
+import * as mime from 'mime';
+import * as path from 'path';
 import * as pluginCommon from 'koishi-plugin-common';
-import {Client} from 'discord.js';
+import {Client, MessageAttachment} from 'discord.js';
 
 const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
 
@@ -9,15 +12,12 @@ import config from './koishi.config';
 import {parse} from 'ts-node';
 
 const discord = new Client();
-/**
- * @instance app koishi实例
- */
 const koishi = new App(config);
 
 /**
  * @dependencies 添加 koishi 插件
  */
-koishi.plugin(pluginCommon, { welcome: ''});
+koishi.plugin(pluginCommon, {welcome: ''});
 // koishi.plugin(require('koishi-plugin-chess'))
 // koishi.plugin(require('koishi-plugin-mcping'));
 // koishi.plugin(require('koishi-plugin-mysql'))
@@ -28,26 +28,50 @@ koishi.plugin(pluginCommon, { welcome: ''});
  * @method koishi.start koishi启动完毕，登录discord
  */
 koishi.start().then(async () => {
+  function loginDiscord() {
+    discord.login(config.discordBotToken).then(() => {
+      console.log('成功')
+    }, (err) => {
+      console.log(err);
+      console.log('失败');
+      loginDiscord();
+    });
+  }
+
   discord.on('ready', () => {
-    sysLog('🌈', `Discord 成功登录 ${discord.user.tag}`)
+    sysLog('🌈', `Discord 成功登录 ${discord.user.tag}`);
+    init();
   });
 
   /**
    * @module util-discord-to-qq
    */
-  discord.on('message', msg => {
+  discord.on('shardError', error => {
+    console.error('A websocket connection encountered an error:', error);
+  });
+  discord.on('unhandledRejection', error => {
+    console.error('Unhandled promise rejection:', error);
+  });
+  loginDiscord();
+  /** @end */
+  sysLog('🌈', 'koishi进程重新加载')
+});
+
+function init() {
+  sysLog('🌈', 'koishi进程重新加载');
+  // discord
+  discord.on('message', async (msg) => {
+    console.log(msg);
     if (msg.content === '!ping') {
       // send back "Pong." to the channel the message was sent in
       msg.channel.send('Pong.');
     }
-    const send = [
-      '[Discord] ' + msg.author.username + '#' + msg.author.discriminator,
-      msg.content
-    ].join('\n');
-    sysLog(send);
+    sysLog(`[Discord Start] `);
+    sysLog(`[author.id=${msg.author.id}] [channel.id=${msg.channel.id}] [username=${msg.author.username + '#' + msg.author.discriminator}]`);
+    sysLog(`[content=${msg.content}]`);
+    sysLog(`[Discord End]`);
     // 无视自己的消息
     if (msg.author.id === config.discordBot) {
-      sysLog(`[Discord] discordBot: ${msg.content}`);
       return;
     }
     // 查询这个频道是否需要通知到群
@@ -55,32 +79,51 @@ koishi.start().then(async () => {
     if (!bridge) {
       return;
     }
-    koishi.bots[0].sendGroupMsg(bridge.qqGroup, send);
-    sysLog('⇿', 'Discord信息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+    const temps: any[] = [
+      '[Discord] ' + msg.author.username + '#' + msg.author.discriminator
+    ];
+    // 没有内容时不处理
+    if (msg.content.trim()) {
+      temps.push(msg.content);
+    }
+    if (msg.attachments.size > 0) {
+      const attachments = msg.attachments.array();
+      for (let attachment of attachments) {
+        temps.push(`[CQ:image,file=${attachment.url}]`);
+      }
+    }
+    if (temps.length > 1) {
+      koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n')).then(() => {
+        sysLog('⇿', 'Discord信息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+      });
+    } else {
+      temps.push('不支持该消息');
+      koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n')).then(() => {
+        sysLog('⇿', 'Discord信息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+      });
+    }
   });
-  discord.on('shardError', error => {
-    console.error('A websocket connection encountered an error:', error);
-  });
-  discord.on('unhandledRejection', error => {
-    console.error('Unhandled promise rejection:', error);
-  });
-  await discord.login(config.discordBotToken);
-
-  koishi.on('message', msg => {
-    console.log(msg)
-    const send = [
-      '[QQ] ' + msg.sender.nickname,
-      msg.message
-    ].join('\n');
+  // koishi
+  koishi.group(...config.bridges.map(b => b.qqGroup)).on('message', msg => {
     const bridge = config.bridges.find((bridge) => bridge.qqGroup === msg.groupId);
     if (!bridge) {
       return;
     }
-    discord.channels.fetch(bridge.discordChannel).then(async (channel) => {
-      await channel.client.shard.send(send)
+    const send = CQCode.parseAll(msg.message).map((msg) => {
+      if (typeof msg === 'string') {
+        return msg;
+      } else if (msg.type === 'image') {
+        const attr = new MessageAttachment(msg.data.url);
+        attr.setName('temp.png');
+        return attr;
+      }
+    });
+    discord.channels.fetch(bridge.discordChannel).then(async (channel: any) => {
+      await channel.send(``)
+      for (const msg of send) {
+        await channel.send(msg);
+      }
       sysLog('⇿', 'QQ信息已推送到Discord', msg.sender.nickname, msg.message)
     });
   });
-  /** @end */
-  sysLog('🌈', 'koishi进程重新加载')
-});
+}
