@@ -1,6 +1,6 @@
 import {App} from 'koishi';
 import 'koishi-adapter-cqhttp';
-import pluginCommon from 'koishi-plugin-common';
+import * as pluginCommon from 'koishi-plugin-common';
 import {Client} from 'discord.js';
 
 const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
@@ -27,8 +27,7 @@ koishi.plugin(pluginCommon, { welcome: ''});
 /**
  * @method koishi.start koishi启动完毕，登录discord
  */
-koishi.start().then(() => {
-  console.log(koishi.bots[0]);
+koishi.start().then(async () => {
   discord.on('ready', () => {
     sysLog('🌈', `Discord 成功登录 ${discord.user.tag}`)
   });
@@ -62,9 +61,13 @@ koishi.start().then(() => {
   discord.on('shardError', error => {
     console.error('A websocket connection encountered an error:', error);
   });
-  discord.login('NzgxMTkzMjUyMDk0NDc2MzYw.X76E6Q.TOkL9MG4JOdb5vsIcUo0nyLPCrc');
+  discord.on('unhandledRejection', error => {
+    console.error('Unhandled promise rejection:', error);
+  });
+  await discord.login(config.discordBotToken);
 
   koishi.on('message', msg => {
+    console.log(msg)
     const send = [
       '[QQ] ' + msg.sender.nickname,
       msg.message
@@ -73,10 +76,10 @@ koishi.start().then(() => {
     if (!bridge) {
       return;
     }
-    discord.channels.fetch(bridge.discordChannel).then((channel) => {
-        channel.shard.send()
+    discord.channels.fetch(bridge.discordChannel).then(async (channel) => {
+      await channel.client.shard.send(send)
+      sysLog('⇿', 'QQ信息已推送到Discord', msg.sender.nickname, msg.message)
     });
-    sysLog('⇿', 'QQ信息已推送到Discord', msg.sender.nickname, msg.message)
   });
   /** @end */
   sysLog('🌈', 'koishi进程重新加载')

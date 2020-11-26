@@ -9,6 +9,7 @@ export default {
     defaultAuthority: 1,
     qqBot: 0,
     discordBot: '',
+    discordBotToken: '',
     bridges: [
         { discordChannel: '', qqGroup: 0}
     ]
