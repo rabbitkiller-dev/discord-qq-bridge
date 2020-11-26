@@ -89,7 +89,7 @@ function init() {
     if (msg.attachments.size > 0) {
       const attachments = msg.attachments.array();
       for (let attachment of attachments) {
-        temps.push(`[CQ:image,file=${attachment.url}]`);
+        temps.push(CQCode.stringify('image', { file: attachment.url }))
       }
     }
     if (temps.length > 1) {
