@@ -24,7 +24,7 @@ export default async function (ctx: {
         for (const cqMsg of cqMessages) {
             const option: WebhookMessageOptions = {
                 username: `${msg.sender.card || msg.sender.nickname} (${msg.sender.userId})`,
-                avatarURL: 'https://www.gravatar.com/avatar/' + md5(msg.sender.userId + '@qq.com')
+                avatarURL: `http://q1.qlogo.cn/g?b=qq&nk=${msg.sender.userId}&s=100`
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
@@ -43,8 +43,8 @@ export default async function (ctx: {
                         break;
                     }
                     default: {
-                        log.error(`不支持的消息: ${cqMsg}`)
-                        return '[!不支持的消息]';
+                        log.error(`不支持的消息: ${JSON.stringify(cqMsg)}`)
+                        await webhook.send('[!不支持的消息]', option);
                     }
                 }
             }
