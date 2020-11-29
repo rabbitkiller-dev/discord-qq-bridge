@@ -43,12 +43,12 @@ export default async function (ctx: {
         }
         if (temps.length > 1) {
             koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n')).then(() => {
-                sysLog('⇿', 'Discord信息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+                sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
             });
         } else {
             temps.push('不支持该消息');
             koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n')).then(() => {
-                sysLog('⇿', 'Discord信息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+                sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
             });
         }
     });
