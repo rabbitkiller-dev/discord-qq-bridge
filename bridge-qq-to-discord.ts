@@ -43,7 +43,7 @@ export default async function (ctx: {
                     // 发送图片
                     case 'image': {
                         const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName('temp.png');
+                        attr.setName('unknown.png');
                         await webhook.send({
                             files: [attr],
                             ...option
