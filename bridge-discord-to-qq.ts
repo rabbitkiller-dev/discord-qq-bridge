@@ -1,4 +1,4 @@
-import {Client, MessageAttachment, WebhookMessageOptions} from "discord.js";
+import {Client, Message, MessageAttachment, WebhookMessageOptions} from "discord.js";
 import {App, CQCode} from 'koishi';
 import config from "./koishi.config";
 import * as md5 from "md5";
@@ -33,12 +33,12 @@ export default async function (ctx: {
         ];
         // 没有内容时不处理
         if (msg.content.trim()) {
-            temps.push(msg.content);
+            temps.push(await parseEmoji(msg.content));
         }
         if (msg.attachments.size > 0) {
             const attachments = msg.attachments.array();
             for (let attachment of attachments) {
-                temps.push(CQCode.stringify('image', { file: attachment.url }))
+                temps.push(CQCode.stringify('image', {file: attachment.url}))
             }
         }
         if (temps.length > 1) {
@@ -52,4 +52,20 @@ export default async function (ctx: {
             });
         }
     });
+}
+
+// 把表情解析成cq:image
+async function parseEmoji(message: string): Promise<string> {
+    let content = message;
+    const res = message.match(/<:(\w+):(\d+)>/g);
+    if (res.length === 0) {
+        return content;
+    }
+    for (const emojiBlock of res) {
+        const emojiMatch = emojiBlock.match(/^<:(\w+):(\d+)>/);
+        if (emojiMatch[2]) {
+            content = content.replace(emojiBlock, CQCode.stringify('image', {file: `https://cdn.discordapp.com/emojis/${emojiMatch[2]}.png`}));
+        }
+    }
+    return content;
 }

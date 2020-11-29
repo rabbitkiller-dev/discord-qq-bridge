@@ -47,9 +47,13 @@ https://blog.csdn.net/h13783313210/article/details/79250685
 
 --- 
 
-- [x] 支持qq图片发送到discord
+- [ ] 寻找献祭用的qq(火急火)
+- [ ] 回复消息
+- [ ] at
 - [ ] 支持discord表情发送到qq
-- [ ] 支持discord.emoji发送到qq
+- [x] 支持discord.emoji发送到qq
 - [ ] 支持qq.gif发送到discord
+- [ ] 支持qq.特殊符号发送到discord
 - [ ] 撤回消息
-- [ ] webhook代替discord接收qq消息的[QQ]
+- [x] 支持qq图片发送到discord
+- [x] webhook代替discord接收qq消息的[QQ]
