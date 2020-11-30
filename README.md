@@ -52,11 +52,11 @@ https://blog.csdn.net/h13783313210/article/details/79250685
 - [ ] 回复消息
     - [x] 支持`qq`回复消息同步至discord (11.29)
     - [ ] 支持`qq`回复discord消息
-- [ ] at
+- [x] at
     - [x] 支持`qq`@qq用户同步消息至discord (11.29)
     - [x] 支持`qq`@discord用户 (11.30)
-    - [ ] 支持`discord`@qq用户同步消息至discord
-    - [ ] 支持`discord`@qq用户
+    - [x] 支持`discord`@qq用户同步消息至discord (11.30)
+    - [x] 支持`discord`@qq用户 (11.30)
 - [ ] 支持qq.gif发送到discord
 - [ ] 支持qq.特殊符号发送到discord
 - [ ] 使用canvas装饰qq接收discord显示的用户名

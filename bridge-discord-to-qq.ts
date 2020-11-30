@@ -1,16 +1,20 @@
-import {Client, Message, MessageAttachment, WebhookMessageOptions} from "discord.js";
-import {App, CQCode} from 'koishi';
+import {Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
+import {App, CQCode, RawSession} from 'koishi';
 import config from "./koishi.config";
 import * as md5 from "md5";
 import * as log from "./utils/log5";
+import {GroupMemberInfo} from "koishi-adapter-cqhttp";
+import {BridgeConfig} from "./interface";
 
 const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
-
+let discord: Client;
+let koishi: App
 export default async function (ctx: {
     discord: Client,
     koishi: App
 }) {
-    const {koishi, discord} = ctx;
+    koishi = ctx.koishi;
+    discord = ctx.discord;
     discord.on('message', async (msg) => {
         if (msg.content === '!ping') {
             msg.channel.send('Pong.');
@@ -24,7 +28,7 @@ export default async function (ctx: {
             return;
         }
         // 查询这个频道是否需要通知到群
-        const bridge = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
+        const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
         if (!bridge) {
             return;
         }
@@ -33,7 +37,12 @@ export default async function (ctx: {
         ];
         // 没有内容时不处理
         if (msg.content.trim()) {
-            temps.push(await parseEmoji(msg.content));
+            let messageContent = msg.content;
+            // 处理回复
+            messageContent = await parseEmoji(messageContent);
+            messageContent = await handlerAt(messageContent, {msg: msg, bridge: bridge});
+            messageContent = await handlerAtQQUser(messageContent, {msg: msg, bridge: bridge});
+            temps.push(messageContent);
         }
         if (msg.attachments.size > 0) {
             const attachments = msg.attachments.array();
@@ -68,4 +77,62 @@ async function parseEmoji(message: string): Promise<string> {
         }
     }
     return content;
+}
+
+// 处理at消息
+async function handlerAt(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
+    console.log()
+    console.log(ctx.msg.mentions);
+    console.log(ctx.msg.mentions.users);
+    ctx.msg.mentions.users.forEach((user)=>{
+        message = message.replace(`<@!${user.id}>`, `[at:${user.username}]`)
+    })
+    return message;
+}
+
+// 处理at discord用户
+async function handlerAtQQUser(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
+    const atList: Array<{ username: string, qq?: string, origin: string }> = [];
+    // 正则匹配
+    [
+        /\[at:([\w-_\s]+)\]/, // [at:rabbitkiller]
+        /\[@([\w-_\s]+)\]/, // [@rabbitkiller]
+        /`at:([\w-_\s]+)`/, // `at:rabbitkiller`
+        /`@([\w-_\s]+)`/, // `@rabbitkiller`
+    ].forEach((reg) => {
+        const gReg = new RegExp(reg.source, 'g');
+        const sReg = new RegExp(reg.source);
+        // 全局匹配满足条件的
+        const strList = message.match(gReg);
+        if (!strList) {
+            return;
+        }
+        strList.forEach((str) => {
+            // 获取用户名, 保留origin匹配上的字段用来replace
+            if (str.match(sReg)[1]) {
+                atList.push(
+                    {origin: str, username: str.match(sReg)[1].trim()}
+                )
+            }
+        })
+    })
+    if (atList.length === 0) {
+        return message;
+    }
+    // @ts-ignore
+    const fetchedMembers: GroupMemberInfo[] = await koishi.bots[0].getGroupMemberList(ctx.bridge.qqGroup);
+    fetchedMembers.forEach((member) => {
+        // 匹配用户名
+        const ats = atList.filter(at => {
+            return at.username === member.card || at.username === member.nickname;
+        });
+        if (ats.length === 0) {
+            return;
+        }
+        // 替换
+        ats.forEach((at) => {
+            message = message.replace(at.origin, CQCode.stringify('at', {qq: member.userId}))
+        })
+    });
+    return message;
 }

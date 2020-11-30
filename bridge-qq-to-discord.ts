@@ -103,6 +103,7 @@ async function handlerAt(message: string, ctx: { msg: RawSession<'message'>, web
         if (typeof cqMsg === 'string' || cqMsg.type !== 'at') {
             return cqMsg;
         }
+        // @ts-ignore
         const user = await koishi.bots[0].getGroupMemberInfo(ctx.msg.groupId, parseInt(cqMsg.data.qq));
         return `\`@${user.card || user.nickname}(${user.userId})\``
     }));
@@ -113,17 +114,17 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
     const atList: Array<{ username: string, discriminator: string, origin: string }> = [];
     // 正则匹配
     [
-        /&#91;at:([\w-_]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
-        /&#91;@([\w-_]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
-        /`at:([\w-_]+)#(\d+)`/, // `at:rabbitkiller#7372`
-        /`@([\w-_]+)#(\d+)`/, // `@rabbitkiller#7372`
-        /at:([\w-_]+)#(\d+)/, // at:rabbitkiller#7372
-        /@([\w-_]+)#(\d+)/, // @rabbitkiller#7372
+        /&#91;at:([\w-_\s]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
+        /&#91;@([\w-_\s]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
+        /`at:([\w-_\s]+)#(\d+)`/, // `at:rabbitkiller#7372`
+        /`@([\w-_\s]+)#(\d+)`/, // `@rabbitkiller#7372`
+        /at:([\w-_\s]+)#(\d+)/, // at:rabbitkiller#7372
+        /@([\w-_\s]+)#(\d+)/, // @rabbitkiller#7372
         // 不需要#号的
-        /&#91;at:([\w-_]+)&#93;/, // [at:rabbitkiller]
-        /&#91;@([\w-_]+)&#93;/, // [@rabbitkiller]
-        /`at:([\w-_]+)`/, // `at:rabbitkiller`
-        /`@([\w-_]+)`/, // `@rabbitkiller`
+        /&#91;at:([\w-_\s]+)&#93;/, // [at:rabbitkiller]
+        /&#91;@([\w-_\s]+)&#93;/, // [@rabbitkiller]
+        /`at:([\w-_\s]+)`/, // `at:rabbitkiller`
+        /`@([\w-_\s]+)`/, // `@rabbitkiller`
     ].forEach((reg) => {
         const gReg = new RegExp(reg.source, 'g');
         const sReg = new RegExp(reg.source);
@@ -136,7 +137,7 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
             // 获取用户名, 保留origin匹配上的字段用来replace
             if (str.match(sReg)[1]) {
                 atList.push(
-                    {origin: str, username: str.match(sReg)[1], discriminator: str.match(sReg)[2]}
+                    {origin: str, username: str.match(sReg)[1].trim(), discriminator: str.match(sReg)[2]}
                 )
             }
         })
