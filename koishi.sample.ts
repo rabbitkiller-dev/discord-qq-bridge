@@ -13,8 +13,8 @@ export default {
     bridges: [
         {
             discord: {
-                id: '', // 频道webhook id
-                token: '', // 频道webhook token
+                id: '', // 频道机器人id
+                token: '', // 频道机器人token
                 channelID: '', // 频道id
             },
             qqGroup: 0 // q群
