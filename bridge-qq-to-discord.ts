@@ -51,4 +51,53 @@ export default async function (ctx: {
         }
         sysLog('⇿', 'QQ信息已推送到Discord', msg.sender.nickname, msg.message)
     });
+<<<<<<< HEAD
+=======
+}
+
+function resolveBrackets(msg) {
+    msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']')
+    return msg
+}
+
+// 处理回复
+async function handlerReply(message: string): Promise<string> {
+    let cqMessages = CQCode.parseAll(message);
+    if (cqMessages[0] && cqMessages[0]['type'] === 'reply') {
+        const reply: any = cqMessages[0];
+        const response = await axios.get(config.server + '/get_msg', {
+            params: {
+                message_id: reply.data.id
+            }
+        })
+        const result = response.data;
+        let replyMsg = ``;
+        if (result.status === 'ok') {
+            const replyTime = new Date(result.data.time * 1000);
+            const replyDate = `${replyTime.getHours()}:${replyTime.getMinutes()}:${replyTime.getSeconds()}`;
+
+            replyMsg = result.data.message
+            replyMsg = resolveBrackets(replyMsg)
+            replyMsg = replyMsg.split('\n').join('\n> ')
+            replyMsg = '> ' + replyMsg + '\n'
+            replyMsg = `> **__回复 ${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg
+        }
+        cqMessages.splice(0, 2);
+        cqMessages = [replyMsg, ...cqMessages];
+    }
+    return CQCode.stringifyAll(cqMessages);
+}
+
+// 把表情解析成cq:image
+async function handlerAt(message: string, ctx: RawSession<'message'>): Promise<string> {
+    let cqMessages = CQCode.parseAll(message);
+    cqMessages = await Promise.all(cqMessages.map(async (cqMsg) => {
+        if (typeof cqMsg === 'string' || cqMsg.type !== 'at') {
+            return cqMsg;
+        }
+        const user = await koishi.bots[0].getGroupMemberInfo(ctx.groupId, parseInt(cqMsg.data.qq));
+        return `\`@${user.card || user.nickname}(${user.userId})\``
+    }));
+    return CQCode.stringifyAll(cqMessages);
+>>>>>>> parent of 3755e74... Update bridge-qq-to-discord.ts
 }
