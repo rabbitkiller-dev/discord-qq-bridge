@@ -17,16 +17,9 @@
 qqBot: 0,
 discordBot: '',
 discordBotToken: '',
-    bridges: [
-        {
-            discord: {
-                id: '', // 频道webhook id
-                token: '', // 频道webhook token
-                channelID: '', // 频道id
-            },
-            qqGroup: 0 // q群
-        }
-    ]
+bridges: [
+    { discordChannel: '', qqGroup: 0}
+] 
 ```
 | key | 类型 | 说明 |
 | --- | --- | --- |
@@ -34,9 +27,7 @@ discordBotToken: '',
 | discordBot | string | discordBot的ID |
 | discordBotToken | string | discordBot的token |
 | bridges | list | 联通桥 |
-| bridges.discord.id | string | 频道webhook id |
-| bridges.discord.token | string | 频道webhook token |
-| bridges.discord.channelID | string | 频道ID |
+| bridges.discordChannel | string | 频道ID |
 | bridges.qqGroup | number | q群号 |
 
 ### 三、运行
