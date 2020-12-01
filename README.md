@@ -45,7 +45,6 @@ https://link.zhihu.com/?target=https%3A//amazonaws-china.com/cn/
 1.
 qq图片的mime类型获取,现在是写死了名字`attr.setName('temp.png');`
 https://blog.csdn.net/h13783313210/article/details/79250685
-<<<<<<< HEAD
 
 --- 
 
@@ -66,5 +65,3 @@ https://blog.csdn.net/h13783313210/article/details/79250685
 - [x] 支持discord.emoji发送到qq (11.29)
 - [x] 支持qq图片发送到discord (11.28)
 - [x] webhook代替discord接收qq消息的[QQ] (11.28)
-=======
->>>>>>> parent of 9c3984e... 重构一版: 并使用支持webhook代替discord接收qq消息的
