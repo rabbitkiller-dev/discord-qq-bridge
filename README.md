@@ -52,7 +52,7 @@ https://discord.com/developers/applications/781193252094476360/bot
 https://link.zhihu.com/?target=https%3A//amazonaws-china.com/cn/
 ### 计划
 1.
-qq图片的mime类型获取,现在是写死了名字`attr.setName('unknown.png');`
+qq图片的mime类型获取,现在是写死了名字`attr.setName('temp.png');`
 https://blog.csdn.net/h13783313210/article/details/79250685
 
 --- 
