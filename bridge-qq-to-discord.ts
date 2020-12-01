@@ -1,4 +1,4 @@
-import {Client, Guild, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
+import {Client, MessageAttachment, WebhookMessageOptions} from "discord.js";
 import {App, CQCode, RawSession} from 'koishi';
 import config from "./koishi.config";
 import axios from "axios";
@@ -20,17 +20,15 @@ export default async function (ctx: {
         if (!bridge) {
             return;
         }
-        // 获取webhook
-        const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
         // 把cq消息解码成对象
         let messageContent = msg.message;
         // 处理回复
         messageContent = await handlerReply(messageContent);
-        // 处理at discord用户
-        messageContent = await handlerAtDiscordUser(messageContent, {msg: msg, webhook: webhook});
         // 处理at
-        messageContent = await handlerAt(messageContent, {msg: msg, webhook: webhook});
+        messageContent = await handlerAt(messageContent, msg);
         const cqMessages = CQCode.parseAll(messageContent);
+        // 获取webhook
+        const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
         for (const cqMsg of cqMessages) {
             const option: WebhookMessageOptions = {
                 username: `${msg.sender.card || msg.sender.nickname} (${msg.sender.userId})`,
@@ -96,67 +94,15 @@ async function handlerReply(message: string): Promise<string> {
     return CQCode.stringifyAll(cqMessages);
 }
 
-// 处理at消息
-async function handlerAt(message: string, ctx: { msg: RawSession<'message'>, webhook: Webhook }): Promise<string> {
+// 把表情解析成cq:image
+async function handlerAt(message: string, ctx: RawSession<'message'>): Promise<string> {
     let cqMessages = CQCode.parseAll(message);
     cqMessages = await Promise.all(cqMessages.map(async (cqMsg) => {
         if (typeof cqMsg === 'string' || cqMsg.type !== 'at') {
             return cqMsg;
         }
-        const user = await koishi.bots[0].getGroupMemberInfo(ctx.msg.groupId, parseInt(cqMsg.data.qq));
+        const user = await koishi.bots[0].getGroupMemberInfo(ctx.groupId, parseInt(cqMsg.data.qq));
         return `\`@${user.card || user.nickname}(${user.userId})\``
     }));
     return CQCode.stringifyAll(cqMessages);
-}
-// 处理at discord用户
-async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'message'>, webhook: Webhook }): Promise<string> {
-    const atList: Array<{ username: string, discriminator: string, origin: string }> = [];
-    // 正则匹配
-    [
-        /&#91;at:([\w-_]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
-        /&#91;@([\w-_]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
-        /`at:([\w-_]+)#(\d+)`/, // `at:rabbitkiller#7372`
-        /`@([\w-_]+)#(\d+)`/, // `@rabbitkiller#7372`
-        /at:([\w-_]+)#(\d+)/, // at:rabbitkiller#7372
-        /@([\w-_]+)#(\d+)/, // @rabbitkiller#7372
-        // 不需要#号的
-        /&#91;at:([\w-_]+)&#93;/, // [at:rabbitkiller]
-        /&#91;@([\w-_]+)&#93;/, // [@rabbitkiller]
-        /`at:([\w-_]+)`/, // `at:rabbitkiller`
-        /`@([\w-_]+)`/, // `@rabbitkiller`
-    ].forEach((reg) => {
-        const gReg = new RegExp(reg.source, 'g');
-        const sReg = new RegExp(reg.source);
-        // 全局匹配满足条件的
-        const strList = message.match(gReg);
-        if (!strList) {
-            return;
-        }
-        strList.forEach((str) => {
-            // 获取用户名, 保留origin匹配上的字段用来replace
-            if (str.match(sReg)[1]) {
-                atList.push(
-                    {origin: str, username: str.match(sReg)[1], discriminator: str.match(sReg)[2]}
-                )
-            }
-        })
-    })
-    if (atList.length === 0) {
-        return message;
-    }
-    // 获取guild, 在通过guild获取所有用户
-    const guild: Guild = await discord.guilds.fetch(ctx.webhook.guildID);
-    const fetchedMembers = await guild.members.fetch();
-    fetchedMembers.forEach((member) => {
-        // 匹配用户名
-        const ats = atList.filter(at => at.username === member.user.username);
-        if (ats.length === 0) {
-            return;
-        }
-         // 替换
-        ats.forEach((at) => {
-            message = message.replace(at.origin, `<@!${member.user.id}>`)
-        })
-    });
-    return message;
 }

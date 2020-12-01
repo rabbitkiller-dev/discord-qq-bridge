@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as mime from 'mime';
 import * as path from 'path';
 import * as pluginCommon from 'koishi-plugin-common';
-import {Client, Intents, MessageAttachment} from 'discord.js';
+import {Client, MessageAttachment} from 'discord.js';
 
 import * as log from './utils/log5';
 const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
@@ -13,12 +13,7 @@ import bridgeDiscordToQq from './bridge-discord-to-qq';
 import config from './koishi.config';
 import {parse} from 'ts-node';
 
-// 需要Intents允许一些行为(要获取频道的用户必须需要)
-const intents = new Intents([
-    Intents.NON_PRIVILEGED, // include all non-privileged intents, would be better to specify which ones you actually need
-    "GUILD_MEMBERS", // lets you request guild members (i.e. fixes the issue)
-]);
-const discord = new Client({ ws: { intents } });
+const discord = new Client();
 const koishi = new App(config);
 
 /**
