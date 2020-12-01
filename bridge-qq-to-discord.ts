@@ -88,7 +88,7 @@ async function handlerReply(message: string): Promise<string> {
             replyMsg = resolveBrackets(replyMsg)
             replyMsg = replyMsg.split('\n').join('\n> ')
             replyMsg = '> ' + replyMsg + '\n'
-            replyMsg = `> **__回复 @${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg
+            replyMsg = `> **__回复 ${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg
         }
         cqMessages.splice(0, 2);
         cqMessages = [replyMsg, ...cqMessages];
