@@ -58,7 +58,7 @@ export default async function (ctx: {
 async function parseEmoji(message: string): Promise<string> {
     let content = message;
     const res = message.match(/<:(\w+):(\d+)>/g);
-    if (!res || res.length === 0) {
+    if (res.length === 0) {
         return content;
     }
     for (const emojiBlock of res) {

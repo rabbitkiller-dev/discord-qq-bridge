@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.0",
     "bufferutil": "^4.0.2",
     "dayjs": "^1.9.6",
     "discord.js": "^12.5.1",
