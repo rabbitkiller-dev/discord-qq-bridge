@@ -44,12 +44,3 @@ https://discordjs.guide/#before-you-begin
 1.
 qq图片的mime类型获取,现在是写死了名字`attr.setName('temp.png');`
 https://blog.csdn.net/h13783313210/article/details/79250685
-
---- 
-
-- [x] 支持qq图片发送到discord
-- [ ] 支持discord表情发送到qq
-- [ ] 支持discord.emoji发送到qq
-- [ ] 支持qq.gif发送到discord
-- [ ] 撤回消息
-- [ ] webhook代替discord接收qq消息的[QQ]
