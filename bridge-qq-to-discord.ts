@@ -101,7 +101,7 @@ async function handlerAt(message: string, ctx: RawSession<'message'>): Promise<s
         if (typeof cqMsg === 'string' || cqMsg.type !== 'at') {
             return cqMsg;
         }
-        const user = await koishi.bots[0].getGroupMemberInfo(ctx.groupId, cqMsg.data.qq);
+        const user = await koishi.bots[0].getGroupMemberInfo(518986671, 243249439);
         return `\`@${user.card || user.nickname}(${user.userId})\``
     }));
     return CQCode.stringifyAll(cqMessages);
