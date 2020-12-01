@@ -11,7 +11,6 @@ export default {
     discordBot: '',
     discordBotToken: '',
     bridges: [
-<<<<<<< HEAD
         {
             discord: {
                 id: '', // 频道webhook id
@@ -20,8 +19,5 @@ export default {
             },
             qqGroup: 0 // q群
         }
-=======
-        { discordChannel: '', qqGroup: 0}
->>>>>>> parent of 9c3984e... 重构一版: 并使用支持webhook代替discord接收qq消息的
     ]
 }
