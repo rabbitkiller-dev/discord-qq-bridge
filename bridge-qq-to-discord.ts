@@ -59,7 +59,7 @@ export default async function (ctx: {
                 }
             }
         }
-        sysLog('⇿', 'QQ消息已推送到Discord', msg.sender.nickname, msg.message)
+        sysLog('⇿', 'QQ信息已推送到Discord', msg.sender.nickname, msg.message)
     });
 }
 
