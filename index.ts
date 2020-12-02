@@ -8,8 +8,8 @@ import {Client, Intents, MessageAttachment} from 'discord.js';
 
 import * as log from './utils/log5';
 const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
-import bridgeQqToDiscord from './bridge-qq-to-discord';
-import bridgeDiscordToQq from './bridge-discord-to-qq';
+import bridgeQqToDiscord from './src/bridge-qq-to-discord';
+import bridgeDiscordToQq from './src/bridge-discord-to-qq';
 import config from './koishi.config';
 import {parse} from 'ts-node';
 

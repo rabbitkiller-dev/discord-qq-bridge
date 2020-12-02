@@ -1,11 +1,11 @@
 import {Client, Guild, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {App, CQCode, RawSession} from 'koishi';
-import config from "./koishi.config";
+import config from "../koishi.config";
 import axios from "axios";
 import * as md5 from "md5";
-import * as log from "./utils/log5";
+import * as log from "../utils/log5";
 
-const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
+const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
 let koishi: App
 export default async function (ctx: {

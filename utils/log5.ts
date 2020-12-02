@@ -18,8 +18,8 @@ export function log5(type, ...messages) {
     console.log(...messages)
     let texts = []
     const now = dayjs()
-    const file = path.join(__dirname, '../logs', `${type}.${now.format('yyyy-MM-dd')}.log`)
-    texts.push('[' + now.format('yyyy-MM-dd hh:mm:ss') + ']')
+    const file = path.join(__dirname, '../logs', `${type}.${now.format('YYYY-MM-DD')}.log`)
+    texts.push('[' + now.format('YYYY-MM-DD HH:mm:ss') + ']')
     for (let i of messages) {
         if (typeof i === 'string') {
             texts.push(i)
