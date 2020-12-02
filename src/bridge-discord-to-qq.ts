@@ -82,7 +82,8 @@ export async function parseEmoji(message: string): Promise<string> {
 // 处理at消息
 export async function handlerAt(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
   ctx.msg.mentions.users.forEach((user) => {
-    message = message.replace(`<@!${user.id}>`, `[@${user.username}]`)
+    message = message.replace(`<@${user.id}>`, `@${user.username}#${user.discriminator}`);
+    message = message.replace(`<@!${user.id}>`, `@${user.username}#${user.discriminator}`);
   });
   return message;
 }
@@ -98,6 +99,17 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
         origin: m,
         username: m.match(/\@([^\n]+) (?:\()([0-9]+)\)(\#0000)?/)[1],
         qq: m.match(/\@([^\n]+) (?:\()([0-9]+)\)(\#0000)?/)[2]
+      })
+    })
+  }
+  // 正则匹配
+  const m2 = message.match(/\@([^\n]+)(?:\()([0-9]+)\)(\#0000)?/g);
+  if (m2) {
+    m2.forEach((m) => {
+      atList.push({
+        origin: m,
+        username: m.match(/\@([^\n]+)(?:\()([0-9]+)\)(\#0000)?/)[1],
+        qq: m.match(/\@([^\n]+)(?:\()([0-9]+)\)(\#0000)?/)[2]
       })
     })
   }

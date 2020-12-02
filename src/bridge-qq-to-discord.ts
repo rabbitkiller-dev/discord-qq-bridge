@@ -22,6 +22,12 @@ export default async function (ctx: {
         }
         // 获取webhook
         const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
+
+        log.message(`[QQ Start] ------------------QQ-----------------------`);
+        log.message(`[author.id=${msg.userId}] [group.id=${msg.groupId}] [username=${msg.sender.card || msg.sender.nickname}]`);
+        log.message(`[content=${msg.message}]`);
+        log.message(`[QQ End]`);
+
         // 把cq消息解码成对象
         let messageContent = msg.message;
         // 处理回复
@@ -33,7 +39,7 @@ export default async function (ctx: {
         const cqMessages = CQCode.parseAll(messageContent);
         for (const cqMsg of cqMessages) {
             const option: WebhookMessageOptions = {
-                username: `${msg.sender.card || msg.sender.nickname} (${msg.sender.userId})`,
+                username: `${msg.sender.card || msg.sender.nickname}(${msg.sender.userId})`,
                 avatarURL: `http://q1.qlogo.cn/g?b=qq&nk=${msg.sender.userId}&s=100`
             }
             // 文字直接发送
