@@ -4,6 +4,7 @@ import config from "../koishi.config";
 import axios from "axios";
 import * as md5 from "md5";
 import * as log from "../utils/log5";
+import {CqHttpApi} from "../utils/cqhttp.api";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
@@ -50,8 +51,18 @@ export default async function (ctx: {
                 switch (cqMsg.type) {
                     // 发送图片
                     case 'image': {
+                        const image = await CqHttpApi.getImage(cqMsg.data.file);
                         const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName('unknown.png');
+                        attr.setName(image.filename);
+                        await webhook.send({
+                            files: [attr],
+                            ...option
+                        });
+                        break;
+                    }
+                    case 'face': {
+                        const attr = new MessageAttachment(`https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/${cqMsg.data.id}.gif`);
+                        attr.setName(`${cqMsg.data.id}.gif`);
                         await webhook.send({
                             files: [attr],
                             ...option
@@ -59,8 +70,8 @@ export default async function (ctx: {
                         break;
                     }
                     default: {
-                        log.error(`不支持的消息: ${JSON.stringify(cqMsg)}`)
-                        await webhook.send('[!不支持的消息]', option);
+                        log.error(`没有处理过的消息: ${JSON.stringify(cqMsg)}`)
+                        await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option);
                     }
                 }
             }
@@ -115,6 +126,7 @@ async function handlerAt(message: string, ctx: { msg: RawSession<'message'>, web
     }));
     return CQCode.stringifyAll(cqMessages);
 }
+
 // 处理at discord用户
 async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'message'>, webhook: Webhook }): Promise<string> {
     const atList: Array<{ username: string, discriminator: string, origin: string }> = [];
