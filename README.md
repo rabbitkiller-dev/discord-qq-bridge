@@ -1,5 +1,19 @@
 # discord-qq-bridge
 
+## 前置说明
+> 关于qq机器人
+
+想要使用qq机器，首先需要安装go-cqhttp。<br>
+[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)：是一个用来连接qq并且会将消息通过http或websocket的方式上报给koishi程序。以达到让程序接收消息和发送消息<br>
+[koishi](https://www.npmjs.com/package/koishi)：是一个接入类似go-cqhttp平台的一个机器人nodejs库，用来方便我们使用nodejs制作qq机器人
+
+> 关于discord机器人
+
+discord制作机器人，不需要类似go-cqhttp的中转程序。官方已经提供了相关api和开发者平台，让开发人员方便的制作机器人<br>
+使用[discord.js](https://www.npmjs.com/package/discord.js)库就可以方便的使用
+
+
+## 本库安装使用方式
 ### 一、下载安装go-cqhttp
 [详细步骤](https://github.com/Mrs4s/go-cqhttp/blob/master/docs/quick_start.md)
 
@@ -45,32 +59,21 @@ npm install
 npm start
 ```
 
+### 支持功能
+
+> qq -> discord
+- [x] 回复消息同步至discord
+- [x] 支持表情、图片和gif消息同步至discord
+- [x] 支持回复消息同步至discord
+> discord -> qq
+- [x] 回复消息同步至discord
+- [ ] 支持图片和gif消息同步至discord (gif暂不支持)
+- [x] 支持回复消息同步至discord
 
 ### 文档相关
+官方Api文档
 https://discordjs.guide/#before-you-begin
 https://discord.com/developers/applications/781193252094476360/bot
 https://link.zhihu.com/?target=https%3A//amazonaws-china.com/cn/
-### 计划
-1.
-qq图片的mime类型获取,现在是写死了名字`attr.setName('unknown.png');`
-https://blog.csdn.net/h13783313210/article/details/79250685
 
---- 
 
-- [ ] 寻找献祭用的qq(火急火)
-- [ ] 回复消息
-    - [x] 支持`qq`回复消息同步至discord (11.29)
-    - [ ] 支持`qq`回复discord消息
-- [x] at
-    - [x] 支持`qq`@qq用户同步消息至discord (11.29)
-    - [x] 支持`qq`@discord用户 (11.30)
-    - [x] 支持`discord`@qq用户同步消息至discord (11.30)
-    - [x] 支持`discord`@qq用户 (11.30)
-- [ ] 支持qq.gif发送到discord
-- [ ] 支持qq.特殊符号发送到discord
-- [ ] 使用canvas装饰qq接收discord显示的用户名
-- [ ] 撤回消息
-- [x] 支持discord表情发送到qq (11.29)
-- [x] 支持discord.emoji发送到qq (11.29)
-- [x] 支持qq图片发送到discord (11.28)
-- [x] webhook代替discord接收qq消息的[QQ] (11.28)
