@@ -98,7 +98,7 @@ export async function parseEmoji(message: string): Promise<string> {
 
 // 处理回复消息
 export async function handlerReply(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
-    if (ctx.msg.reference.messageID) {
+    if (ctx.msg.reference && ctx.msg.reference.messageID) {
         const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
         const refMsg = await messageRepo.findOne({discordMessageID: ctx.msg.reference.messageID});
         // 尝试查找discord对应的qq消息id
