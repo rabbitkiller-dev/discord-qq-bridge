@@ -5,6 +5,8 @@ import axios from "axios";
 import * as md5 from "md5";
 import * as log from "../utils/log5";
 import {CqHttpApi} from "../utils/cqhttp.api";
+import {DatabaseService} from "./database.service";
+import {MessageEntity} from "./entity/message.entity";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
@@ -45,7 +47,12 @@ export default async function (ctx: {
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                await webhook.send(cqMsg, option);
+                const resMessage = await webhook.send(cqMsg, option);
+                if (Array.isArray(resMessage)) {
+                    await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
+                } else {
+                    await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
+                }
             } else {
                 // 判断类型在发送对应格式
                 switch (cqMsg.type) {
@@ -88,11 +95,13 @@ function resolveBrackets(msg) {
 // 处理回复
 async function handlerReply(message: string): Promise<string> {
     let cqMessages = CQCode.parseAll(message);
-    if (cqMessages[0] && cqMessages[0]['type'] === 'reply') {
-        const reply: any = cqMessages[0];
+    await Promise.all(cqMessages.map(async (cqMsg) => {
+        if (typeof cqMsg === 'string' || cqMsg.type !== 'reply') {
+            return cqMsg;
+        }
         const response = await axios.get(config.server + '/get_msg', {
             params: {
-                message_id: reply.data.id
+                message_id: cqMsg.data.id
             }
         })
         const result = response.data;
@@ -101,15 +110,35 @@ async function handlerReply(message: string): Promise<string> {
             const replyTime = new Date(result.data.time * 1000);
             const replyDate = `${replyTime.getHours()}:${replyTime.getMinutes()}:${replyTime.getSeconds()}`;
 
-            replyMsg = result.data.message
-            replyMsg = resolveBrackets(replyMsg)
-            replyMsg = replyMsg.split('\n').join('\n> ')
-            replyMsg = '> ' + replyMsg + '\n'
-            replyMsg = `> **__回复 @${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg
+            replyMsg = result.data.message;
+            replyMsg = resolveBrackets(replyMsg);
+            replyMsg = replyMsg.split('\n').join('\n> ');
+            replyMsg = '> ' + replyMsg + '\n';
+            replyMsg = `> **__回复 @${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg;
+            // 把回复消息里的图片换成点位符,
+            replyMsg = CQCode.stringifyAll(CQCode.parseAll(replyMsg).map((cqMsg) => {
+                if (typeof cqMsg === 'string') {
+                    // 当qq回复的消息里面也有回复时会出来一串不明物,也去掉变成空字符串
+                    if(cqMsg.includes('<summary>点击查看完整消息</summary>') && cqMsg.includes('<source name="聊天记录"')){
+                        return '';
+                    }
+                    return cqMsg;
+                }
+                if (cqMsg.type === 'image' || cqMsg.type === 'face') {
+                    return `:frame_photo:`;
+                }
+                if (cqMsg.type === 'reply') {
+                    return '';
+                }
+                if (cqMsg.type === 'xml') {
+                    return '';
+                }
+                return cqMsg;
+            }));
         }
         cqMessages.splice(0, 2);
         cqMessages = [replyMsg, ...cqMessages];
-    }
+    }));
     return CQCode.stringifyAll(cqMessages);
 }
 
@@ -172,10 +201,19 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
         if (ats.length === 0) {
             return;
         }
-         // 替换
+        // 替换
         ats.forEach((at) => {
             message = message.replace(at.origin, `<@!${member.user.id}>`)
         })
     });
     return message;
+}
+
+// 保存关联消息
+async function handlerSaveMessage(qqMessageID: string, discordMessageID: string): Promise<MessageEntity> {
+    const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
+    return messageRepo.save({
+        qqMessageID,
+        discordMessageID
+    });
 }

@@ -1,4 +1,5 @@
 import {App, CQCode} from 'koishi';
+import "reflect-metadata";
 import 'koishi-adapter-cqhttp';
 import * as fs from 'fs';
 import * as mime from 'mime';
@@ -12,6 +13,7 @@ import bridgeQqToDiscord from './src/bridge-qq-to-discord';
 import bridgeDiscordToQq from './src/bridge-discord-to-qq';
 import config from './koishi.config';
 import {parse} from 'ts-node';
+import {DatabaseService} from "./src/database.service";
 
 // 需要Intents允许一些行为(要获取频道的用户必须需要)
 const intents = new Intents([
@@ -35,6 +37,7 @@ koishi.plugin(pluginCommon, {welcome: ''});
  * @method koishi.start koishi启动完毕，登录discord
  */
 koishi.start().then(async () => {
+    await DatabaseService.init();
     function loginDiscord() {
         discord.login(config.discordBotToken).then(() => {
             console.log('成功')
@@ -74,3 +77,4 @@ koishi.start().then(async () => {
     /** @end */
     sysLog('🌈', 'koishi进程重新加载')
 });
+
