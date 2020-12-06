@@ -10,6 +10,7 @@ export default {
     qqBot: 0,
     discordBot: '',
     discordBotToken: '',
+    // 通信桥配置
     bridges: [
         {
             discord: {
@@ -19,5 +20,7 @@ export default {
             },
             qqGroup: 0 // q群
         }
-    ]
+    ],
+    // 代理地址
+    proxy: '',
 }

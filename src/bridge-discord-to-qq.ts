@@ -2,11 +2,16 @@ import {Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOption
 import {App, CQCode, RawSession} from 'koishi';
 import config from "../koishi.config";
 import * as md5 from "md5";
+import * as fs from "fs";
+import * as path from "path";
+import * as request from 'request';
 import * as log from "../utils/log5";
 import {GroupMemberInfo} from "koishi-adapter-cqhttp";
 import {BridgeConfig} from "../interface";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
+import {createCanvas, loadImage} from "canvas";
+import {downloadImage, imageCacheDir, imageDiscordAvatarCacheDir} from "./utils/download-file";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
@@ -45,7 +50,7 @@ export async function toQQ(msg) {
         // 没有内容时不处理
         if (msg.content.trim()) {
             // 添加用户名称在信息前面
-            let messageContent = `[Discord] @${msg.author.username}#${msg.author.discriminator}\n${msg.content}`;
+            let messageContent = await handlerUserAvatar(msg.content, {msg: msg, bridge: bridge});
             // 处理回复
             messageContent = await parseEmoji(messageContent);
             // 处理回复
@@ -94,6 +99,24 @@ export async function parseEmoji(message: string): Promise<string> {
         }
     }
     return content;
+}
+
+// 处理头部消息
+export async function handlerUserAvatar(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
+    const filePath = await downloadImage({url: ctx.msg.author.avatarURL({format: 'png'})});
+    const img = await loadImage(filePath);
+    const canvas = createCanvas(30, 30)
+    const canvasCtx = canvas.getContext('2d');
+    canvasCtx.arc(15, 15, 15, 0, Math.PI * 2, false)
+    canvasCtx.clip()
+    canvasCtx.drawImage(img, 0, 0, 30, 30);
+    // const imgDataUrl = canvas.toDataURL();
+    let stream = fs.createWriteStream(path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
+    stream.write(canvas.toBuffer());
+    // const cqImage = CQCode.stringify('image', {file: 'file:///' + path.join(imageDiscordAvatarCacheDir, path.basename(filePath))});
+    // const cqImage = CQCode.stringify('image', {file: imgDataUrl.replace('data:image/png;base64,', 'base64://')});
+    const cqImage = CQCode.stringify('image', {file: 'https://www.baidu.com/img/flexible/logo/pc/result.png'});
+    return `[D] ${cqImage} @${ctx.msg.author.username}#${ctx.msg.author.discriminator}\n${message}`;
 }
 
 // 处理回复消息
