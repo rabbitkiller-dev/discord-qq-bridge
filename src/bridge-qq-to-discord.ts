@@ -112,6 +112,18 @@ async function handlerReply(message: string): Promise<string> {
 
             replyMsg = result.data.message;
             replyMsg = resolveBrackets(replyMsg);
+            // 回复的消息是否来自discord
+            const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
+            const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
+            if (refMsg && refMsg.from === 'discord') {
+                // 把来自discord的用户头像去掉
+                const mlist = replyMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
+                if (!mlist) {
+                    return;
+                }
+                const [m1, m2, m3] = mlist;
+                replyMsg = replyMsg.replace(m1, `@${m2}#${m3}`);
+            }
             replyMsg = replyMsg.split('\n').join('\n> ');
             replyMsg = '> ' + replyMsg + '\n';
             replyMsg = `> **__回复 @${result.data.sender.nickname} 在 ${replyDate} 的消息__**\n` + replyMsg;
@@ -119,7 +131,7 @@ async function handlerReply(message: string): Promise<string> {
             replyMsg = CQCode.stringifyAll(CQCode.parseAll(replyMsg).map((cqMsg) => {
                 if (typeof cqMsg === 'string') {
                     // 当qq回复的消息里面也有回复时会出来一串不明物,也去掉变成空字符串
-                    if(cqMsg.includes('<summary>点击查看完整消息</summary>') && cqMsg.includes('<source name="聊天记录"')){
+                    if (cqMsg.includes('<summary>点击查看完整消息</summary>') && cqMsg.includes('<source name="聊天记录"')) {
                         return '';
                     }
                     return cqMsg;
