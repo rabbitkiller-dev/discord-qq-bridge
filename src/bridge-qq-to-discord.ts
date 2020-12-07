@@ -60,7 +60,7 @@ export default async function (ctx: {
                     case 'image': {
                         const image = await CqHttpApi.getImage(cqMsg.data.file);
                         const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName(image.filename);
+                        attr.setName(image.filename.replace(/(\.null)||(\.image)/g, '.png'));
                         await webhook.send({
                             files: [attr],
                             ...option
@@ -214,6 +214,7 @@ async function handlerSaveMessage(qqMessageID: string, discordMessageID: string)
     const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
     return messageRepo.save({
         qqMessageID,
-        discordMessageID
+        discordMessageID,
+        from: 'qq',
     });
 }

@@ -2,11 +2,15 @@ import {Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOption
 import {App, CQCode, RawSession} from 'koishi';
 import config from "../koishi.config";
 import * as md5 from "md5";
+import * as fs from "fs";
+import * as path from "path";
+import * as request from 'request';
 import * as log from "../utils/log5";
 import {GroupMemberInfo} from "koishi-adapter-cqhttp";
 import {BridgeConfig} from "../interface";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
+import {createCanvas, loadImage} from "canvas";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
@@ -202,6 +206,7 @@ async function handlerSaveMessage(qqMessageID: string, discordMessageID: string)
     const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
     return messageRepo.save({
         qqMessageID,
-        discordMessageID
+        discordMessageID,
+        from: 'discord',
     });
 }
