@@ -10,7 +10,6 @@ import {GroupMemberInfo} from "koishi-adapter-cqhttp";
 import {BridgeConfig} from "../interface";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
-import {createCanvas, loadImage} from "canvas";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
