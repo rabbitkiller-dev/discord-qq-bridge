@@ -42,18 +42,19 @@ export async function toQQ(msg) {
             return;
         }
         const temps: any[] = [];
+        // 添加用户名称在信息前面
+        let messageContent = `[Discord] @${msg.author.username}#${msg.author.discriminator}`;
         // 没有内容时不处理
         if (msg.content.trim()) {
-            // 添加用户名称在信息前面
-            let messageContent = `[Discord] @${msg.author.username}#${msg.author.discriminator}\n${msg.content}`;
             // 处理回复
             messageContent = await parseEmoji(messageContent);
             // 处理回复
             messageContent = await handlerReply(messageContent, {msg: msg, bridge: bridge});
             messageContent = await handlerAt(messageContent, {msg: msg, bridge: bridge});
             messageContent = await handlerAtQQUser(messageContent, {msg: msg, bridge: bridge});
-            temps.push(messageContent);
+            messageContent = `${messageContent}\n${msg.content}`;
         }
+        temps.push(messageContent);
         if (msg.attachments.size > 0) {
             const attachments = msg.attachments.array();
             for (let attachment of attachments) {
