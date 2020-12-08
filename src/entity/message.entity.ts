@@ -10,4 +10,7 @@ export class MessageEntity {
 
     @Column()
     discordMessageID: string;
+
+    @Column({nullable: true})
+    from: 'qq' | 'discord';
 }
