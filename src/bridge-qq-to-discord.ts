@@ -60,7 +60,7 @@ export default async function (ctx: {
                     case 'image': {
                         const image = await CqHttpApi.getImage(cqMsg.data.file);
                         const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName(image.filename.replace(/(\.null)||(\.image)/g, '.png'));
+                        attr.setName(image.filename.replace(/(\.null)|(\.image)/g, '.png'));
                         const resMessage = await webhook.send({
                             files: [attr],
                             ...option
