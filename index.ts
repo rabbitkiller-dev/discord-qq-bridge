@@ -12,7 +12,6 @@ const {sysLog} = require('./utils/sysLog'); // sysLog 保存日志
 import bridgeQqToDiscord from './src/bridge-qq-to-discord';
 import bridgeDiscordToQq from './src/bridge-discord-to-qq';
 import config from './koishi.config';
-import {parse} from 'ts-node';
 import {DatabaseService} from "./src/database.service";
 
 // 需要Intents允许一些行为(要获取频道的用户必须需要)

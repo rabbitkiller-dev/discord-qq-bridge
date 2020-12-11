@@ -60,25 +60,40 @@ export default async function (ctx: {
                     case 'image': {
                         const image = await CqHttpApi.getImage(cqMsg.data.file);
                         const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName(image.filename.replace(/(\.null)||(\.image)/g, '.png'));
-                        await webhook.send({
+                        attr.setName(image.filename.replace(/(\.null)|(\.image)/g, '.png'));
+                        const resMessage = await webhook.send({
                             files: [attr],
                             ...option
                         });
+                        if (Array.isArray(resMessage)) {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
+                        } else {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
+                        }
                         break;
                     }
                     case 'face': {
                         const attr = new MessageAttachment(`https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/${cqMsg.data.id}.gif`);
                         attr.setName(`${cqMsg.data.id}.gif`);
-                        await webhook.send({
+                        const resMessage = await webhook.send({
                             files: [attr],
                             ...option
                         });
+                        if (Array.isArray(resMessage)) {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
+                        } else {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
+                        }
                         break;
                     }
                     default: {
                         log.error(`没有处理过的消息: ${JSON.stringify(cqMsg)}`)
-                        await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option);
+                        const resMessage = await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option);
+                        if (Array.isArray(resMessage)) {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
+                        } else {
+                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
+                        }
                     }
                 }
             }
