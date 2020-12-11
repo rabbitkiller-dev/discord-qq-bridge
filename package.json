@@ -30,6 +30,7 @@
   "dependencies": {
     "axios": "^0.21.0",
     "bufferutil": "^4.0.2",
+    "cheerio": "^1.0.0-rc.3",
     "dayjs": "^1.9.6",
     "discord.js": "^12.5.1",
     "file-type": "^16.0.1",
@@ -37,6 +38,7 @@
     "koishi-adapter-cqhttp": "^1.0.7",
     "md5": "^2.3.0",
     "mime": "^2.4.6",
+    "nhentai-api": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.0",
     "ts-node": "^9.0.0",

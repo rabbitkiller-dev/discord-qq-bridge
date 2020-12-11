@@ -19,5 +19,8 @@ export default {
             },
             qqGroup: 0 // q群
         }
+    ],
+    imageSearch: [
+        {type: 'qq', qqGroup: 0, r18: false},
     ]
 }
