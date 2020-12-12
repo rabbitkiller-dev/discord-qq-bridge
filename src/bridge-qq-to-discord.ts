@@ -1,4 +1,4 @@
-import {Client, Guild, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
+import {Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {App, CQCode, RawSession} from 'koishi';
 import config from "../koishi.config";
 import axios from "axios";
@@ -17,42 +17,38 @@ export default async function (ctx: {
 }) {
     koishi = ctx.koishi;
     discord = ctx.discord;
-    koishi.group(...config.bridges.map(b => b.qqGroup)).on('message', async (msg) => {
-        // 查看有没有连接配置
-        const bridge = config.bridges.find((bridge) => bridge.qqGroup === msg.groupId);
-        if (!bridge) {
-            return;
-        }
-        // 获取webhook
-        const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
+    koishi.group(...config.bridges.map(b => b.qqGroup)).on('message', async (qqMessage) => {
+        await toDiscord(qqMessage);
+    });
+}
 
-        log.message(`[QQ Start] ------------------QQ-----------------------`);
-        log.message(`[author.id=${msg.userId}] [group.id=${msg.groupId}] [username=${msg.sender.card || msg.sender.nickname}]`);
-        log.message(`[content=${msg.message}]`);
-        log.message(`[QQ End]`);
-
+async function toDiscord(qqMessage: RawSession<'message'>) {
+    // 查看有没有连接配置
+    const bridge = config.bridges.find((bridge) => bridge.qqGroup === qqMessage.groupId);
+    if (!bridge) {
+        return;
+    }
+    // 获取webhook
+    const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
+    try {
         // 把cq消息解码成对象
-        let messageContent = msg.message;
+        let messageContent = qqMessage.message;
         // 处理回复
         messageContent = await handlerReply(messageContent);
         // 处理at discord用户
-        messageContent = await handlerAtDiscordUser(messageContent, {msg: msg, webhook: webhook});
+        messageContent = await handlerAtDiscordUser(messageContent, {msg: qqMessage, webhook: webhook});
         // 处理at
-        messageContent = await handlerAt(messageContent, {msg: msg, webhook: webhook});
+        messageContent = await handlerAt(messageContent, {msg: qqMessage, webhook: webhook});
         const cqMessages = CQCode.parseAll(messageContent);
         for (const cqMsg of cqMessages) {
             const option: WebhookMessageOptions = {
-                username: `${msg.sender.card || msg.sender.nickname}(${msg.sender.userId})`,
-                avatarURL: `http://q1.qlogo.cn/g?b=qq&nk=${msg.sender.userId}&s=100`
+                username: `${qqMessage.sender.card || qqMessage.sender.nickname}(${qqMessage.sender.userId})`,
+                avatarURL: `http://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100`
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                const resMessage = await webhook.send(cqMsg, option);
-                if (Array.isArray(resMessage)) {
-                    await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
-                } else {
-                    await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
-                }
+                const resMessage: Message = await webhook.send(cqMsg, option) as Message;
+                await handlerSaveMessage(qqMessage, resMessage);
             } else {
                 // 判断类型在发送对应格式
                 switch (cqMsg.type) {
@@ -64,12 +60,8 @@ export default async function (ctx: {
                         const resMessage = await webhook.send({
                             files: [attr],
                             ...option
-                        });
-                        if (Array.isArray(resMessage)) {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
-                        } else {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
-                        }
+                        }) as Message;
+                        await handlerSaveMessage(qqMessage, resMessage);
                         break;
                     }
                     case 'face': {
@@ -78,29 +70,26 @@ export default async function (ctx: {
                         const resMessage = await webhook.send({
                             files: [attr],
                             ...option
-                        });
-                        if (Array.isArray(resMessage)) {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
-                        } else {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
-                        }
+                        }) as Message;
+                        await handlerSaveMessage(qqMessage, resMessage);
                         break;
                     }
                     default: {
                         log.error(`没有处理过的消息: ${JSON.stringify(cqMsg)}`)
-                        const resMessage = await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option);
-                        if (Array.isArray(resMessage)) {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage[0].id);
-                        } else {
-                            await handlerSaveMessage(msg.messageId.toString(), resMessage.id);
-                        }
+                        const resMessage = await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option) as Message;
+                        await handlerSaveMessage(qqMessage, resMessage);
                     }
                 }
             }
         }
-        sysLog('⇿', 'QQ消息已推送到Discord', msg.sender.nickname, msg.message)
-    });
+        sysLog('⇿', 'QQ消息已推送到Discord', qqMessage.sender.nickname, qqMessage.message)
+    } catch (error) {
+        log.error(error);
+        const resMessage = await webhook.send('发生错误导致消息同步失败') as Message;
+        await handlerSaveMessage(qqMessage, resMessage);
+    }
 }
+
 
 function resolveBrackets(msg) {
     msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']')
@@ -133,11 +122,10 @@ async function handlerReply(message: string): Promise<string> {
             if (refMsg && refMsg.from === 'discord') {
                 // 把来自discord的用户头像去掉
                 const mlist = replyMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
-                if (!mlist) {
-                    return;
+                if (mlist) {
+                    const [m1, m2, m3] = mlist;
+                    replyMsg = replyMsg.replace(m1, `@${m2}#${m3}`);
                 }
-                const [m1, m2, m3] = mlist;
-                replyMsg = replyMsg.replace(m1, `@${m2}#${m3}`);
             }
             replyMsg = replyMsg.split('\n').join('\n> ');
             replyMsg = '> ' + replyMsg + '\n';
@@ -237,11 +225,18 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
 }
 
 // 保存关联消息
-async function handlerSaveMessage(qqMessageID: string, discordMessageID: string): Promise<MessageEntity> {
+async function handlerSaveMessage(qqMessage: RawSession<'message'>, discordMessage: Message): Promise<MessageEntity> {
     const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
-    return messageRepo.save({
-        qqMessageID,
-        discordMessageID,
-        from: 'qq',
-    });
+    const messageEntity = new MessageEntity();
+    messageEntity.from = "qq";
+    messageEntity.qqMessageID = qqMessage.messageId.toString();
+    messageEntity.qqMessage = {
+        content: qqMessage.message
+    }
+    messageEntity.discordMessageID = discordMessage.id;
+    messageEntity.discordMessage = {
+        content: discordMessage.content,
+        attachments: discordMessage.attachments.array() as any,
+    }
+    return messageRepo.save(messageEntity);
 }
