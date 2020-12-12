@@ -44,7 +44,9 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
         for (const cqMsg of cqMessages) {
             const option: WebhookMessageOptions = {
                 username: `${qqMessage.sender.card || qqMessage.sender.nickname}(${qqMessage.sender.userId})`,
-                avatarURL: `http://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100`
+                avatarURL: `https://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100&t=${Math.random()}`
+                // avatarURL: `https://q.qlogo.cn/g?b=qq&nk={uid}&s=100&t={Math.random()}
+                // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
