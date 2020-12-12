@@ -7,6 +7,7 @@ import * as log from "../utils/log5";
 import {CqHttpApi} from "../utils/cqhttp.api";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
+import {downloadImage, downloadQQImage} from "./utils/download-file";
 
 const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 let discord: Client;
@@ -54,9 +55,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
                 switch (cqMsg.type) {
                     // 发送图片
                     case 'image': {
-                        const image = await CqHttpApi.getImage(cqMsg.data.file);
-                        const attr = new MessageAttachment(cqMsg.data.url);
-                        attr.setName(image.filename.replace(/(\.null)|(\.image)/g, '.png'));
+                        const filePath = await downloadQQImage({url: cqMsg.data.url});
+                        const attr = new MessageAttachment(filePath);
                         const resMessage = await webhook.send({
                             files: [attr],
                             ...option

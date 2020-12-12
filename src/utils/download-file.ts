@@ -2,10 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as request from 'request';
 import config from "../../koishi.config";
+import got from "got";
+import * as FileType from "file-type";
+import * as md5 from "md5";
 
 export const cacheDir = path.join(__dirname, '../../cache');
 export const imageCacheDir = path.join(cacheDir, 'images');
 export const imageDiscordAvatarCacheDir = path.join(cacheDir, 'images/discord-avatar');
+export const imageQQEmojiCacheDir = path.join(cacheDir, 'images/qq-emoji');
 
 async function initCache() {
     if (!fs.existsSync(cacheDir)) {
@@ -17,9 +21,13 @@ async function initCache() {
     if (!fs.existsSync(imageDiscordAvatarCacheDir)) {
         fs.mkdirSync(imageDiscordAvatarCacheDir);
     }
+    if (!fs.existsSync(imageQQEmojiCacheDir)) {
+        fs.mkdirSync(imageQQEmojiCacheDir);
+    }
 }
+
 // 下载文件并缓存
-export async function downloadImage(params: { url: string, isCache?: boolean}): Promise<string> {
+export async function downloadImage(params: { url: string, isCache?: boolean }): Promise<string> {
     params = Object.assign({isCache: true}, params);
     await initCache();
     const filename = path.basename(params.url);
@@ -47,4 +55,25 @@ export async function downloadImage(params: { url: string, isCache?: boolean}): 
             })
     })
 
+};
+
+// 下载qq图片并缓存
+export async function downloadQQImage(params: { url: string, cache?: boolean }): Promise<string> {
+    params = Object.assign({cache: true}, params);
+    await initCache();
+    const fileMD5Name = md5(params.url);
+    const isExists = fs.readdirSync(imageQQEmojiCacheDir).find((file) => file.startsWith(fileMD5Name));
+    if (isExists && params.cache) {
+        return path.join(imageQQEmojiCacheDir, isExists);
+    }
+    const stream = got.stream(params.url);
+    const fileType = await FileType.fromStream(stream);
+    const filename = `${md5(params.url)}.${fileType.ext}`;
+    const localPath = path.join(imageQQEmojiCacheDir, filename);
+    let writeStream = fs.createWriteStream(localPath);
+    return new Promise((resolve, reject) => {
+        got.stream(params.url).pipe(writeStream).on("close", () => {
+            resolve(localPath)
+        })
+    })
 };
