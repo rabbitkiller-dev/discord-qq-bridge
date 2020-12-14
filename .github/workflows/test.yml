@@ -19,11 +19,19 @@ jobs:
         node-version: [10.x, 12.x, 14.x]
 
     steps:
+    - name: Checkout
     - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
-    - run: npm test
-    - run: npm run build --if-present
+
+    - shell: bash
+      run: |
+        echo export default {} as any > koishi.config.ts
+        npm ci
+        npm test
+        npm run build --if-present
