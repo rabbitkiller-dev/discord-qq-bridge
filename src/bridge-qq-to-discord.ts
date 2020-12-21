@@ -34,6 +34,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
     try {
         // 把cq消息解码成对象
         let messageContent = qqMessage.message;
+        // 处理转发
+        messageContent = await handlerFoward(messageContent);
         // 处理回复
         messageContent = await handlerReply(messageContent);
         // 处理at discord用户
@@ -96,6 +98,67 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
 function resolveBrackets(msg) {
     msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']')
     return msg
+}
+
+// 处理转发
+async function handlerFoward(message: string): Promise<string> {
+    let cqMessages = CQCode.parseAll(message);
+    await Promise.all(cqMessages.map(async (cqMsg) => {
+        if (typeof cqMsg === 'string' || cqMsg.type !== 'foward') {
+            return cqMsg;
+        }
+        const response = await axios.get(config.server + '/get_msg', {
+            params: {
+                message_id: cqMsg.data.id
+            }
+        })
+        const result = response.data;
+        let fowardMsg = ``;
+        if (result.status === 'ok') {
+            const fowardTime = new Date(result.data.time * 1000);
+            const fowardDate = `${fowardTime.getHours()}:${fowardTime.getMinutes()}:${fowardTime.getSeconds()}`;
+
+            fowardMsg = result.data.message;
+            fowardMsg = resolveBrackets(fowardMsg);
+            // 回复的消息是否来自discord
+            const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
+            const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
+            if (refMsg && refMsg.from === 'discord') {
+                // 把来自discord的用户头像去掉
+                const mlist = fowardMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
+                if (mlist) {
+                    const [m1, m2, m3] = mlist;
+                    fowardMsg = fowardMsg.replace(m1, `@${m2}#${m3}`);
+                }
+            }
+            fowardMsg = fowardMsg.split('\n').join('\n> ');
+            fowardMsg = '> ' + fowardMsg + '\n';
+            fowardMsg = `> **__转发 @${result.data.sender.nickname} 在 ${fowardDate} 的消息__**\n` + fowardMsg;
+            // 把回复消息里的图片换成点位符,
+            fowardMsg = CQCode.stringifyAll(CQCode.parseAll(fowardMsg).map((cqMsg) => {
+                if (typeof cqMsg === 'string') {
+                    // 当qq回复的消息里面也有回复时会出来一串不明物,也去掉变成空字符串
+                    if (cqMsg.includes('<summary>点击查看完整消息</summary>') && cqMsg.includes('<source name="聊天记录"')) {
+                        return '';
+                    }
+                    return cqMsg;
+                }
+                if (cqMsg.type === 'image' || cqMsg.type === 'face') {
+                    return `:frame_photo:`;
+                }
+                if (cqMsg.type === 'reply') {
+                    return '';
+                }
+                if (cqMsg.type === 'xml') {
+                    return '';
+                }
+                return cqMsg;
+            }));
+        }
+        cqMessages.splice(0, 2);
+        cqMessages = [fowardMsg, ...cqMessages];
+    }));
+    return CQCode.stringifyAll(cqMessages);
 }
 
 // 处理回复
