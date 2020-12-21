@@ -35,7 +35,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
         // 把cq消息解码成对象
         let messageContent = qqMessage.message;
         // 处理转发
-        messageContent = await handlerFoward(messageContent);
+        messageContent = await handlerForward(messageContent);
         // 处理回复
         messageContent = await handlerReply(messageContent);
         // 处理at discord用户
@@ -52,7 +52,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                const resMessage: Message = await webhook.send(cqMsg, option) as Message;
+                let strMsg = resolveBrackets(cqMsg);
+                const resMessage: Message = await webhook.send(strMsg, option) as Message;
                 await handlerSaveMessage(qqMessage, resMessage);
             } else {
                 // 判断类型在发送对应格式
@@ -101,10 +102,10 @@ function resolveBrackets(msg) {
 }
 
 // 处理转发
-async function handlerFoward(message: string): Promise<string> {
+async function handlerForward(message: string): Promise<string> {
     let cqMessages = CQCode.parseAll(message);
     await Promise.all(cqMessages.map(async (cqMsg) => {
-        if (typeof cqMsg === 'string' || cqMsg.type !== 'foward') {
+        if (typeof cqMsg === 'string' || cqMsg.type !== 'forward') {
             return cqMsg;
         }
         const response = await axios.get(config.server + '/get_msg', {
@@ -113,50 +114,40 @@ async function handlerFoward(message: string): Promise<string> {
             }
         })
         const result = response.data;
-        let fowardMsg = ``;
+        let forwardMsg = ``;
         if (result.status === 'ok') {
-            const fowardTime = new Date(result.data.time * 1000);
-            const fowardDate = `${fowardTime.getHours()}:${fowardTime.getMinutes()}:${fowardTime.getSeconds()}`;
+            const forwardTime = new Date(result.data.time * 1000);
+            const forwardDate = `${forwardTime.getHours()}:${forwardTime.getMinutes()}:${forwardTime.getSeconds()}`;
 
-            fowardMsg = result.data.message;
-            fowardMsg = resolveBrackets(fowardMsg);
+            forwardMsg = result.data.message;
+            forwardMsg = resolveBrackets(forwardMsg);
             // 回复的消息是否来自discord
             const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
             const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
             if (refMsg && refMsg.from === 'discord') {
                 // 把来自discord的用户头像去掉
-                const mlist = fowardMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
+                const mlist = forwardMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
                 if (mlist) {
                     const [m1, m2, m3] = mlist;
-                    fowardMsg = fowardMsg.replace(m1, `@${m2}#${m3}`);
+                    forwardMsg = forwardMsg.replace(m1, `@${m2}#${m3}`);
                 }
             }
-            fowardMsg = fowardMsg.split('\n').join('\n> ');
-            fowardMsg = '> ' + fowardMsg + '\n';
-            fowardMsg = `> **__转发 @${result.data.sender.nickname} 在 ${fowardDate} 的消息__**\n` + fowardMsg;
+            forwardMsg = forwardMsg.split('\n').join('> ');
+            forwardMsg = '> ' + forwardMsg + '\n';
+            forwardMsg = `> **__转发 @${result.data.sender.nickname} 在 ${forwardDate} 的消息__**\n` + forwardMsg;
             // 把回复消息里的图片换成点位符,
-            fowardMsg = CQCode.stringifyAll(CQCode.parseAll(fowardMsg).map((cqMsg) => {
+            forwardMsg = CQCode.stringifyAll(CQCode.parseAll(forwardMsg).map((cqMsg) => {
                 if (typeof cqMsg === 'string') {
-                    // 当qq回复的消息里面也有回复时会出来一串不明物,也去掉变成空字符串
-                    if (cqMsg.includes('<summary>点击查看完整消息</summary>') && cqMsg.includes('<source name="聊天记录"')) {
-                        return '';
-                    }
                     return cqMsg;
                 }
                 if (cqMsg.type === 'image' || cqMsg.type === 'face') {
                     return `:frame_photo:`;
                 }
-                if (cqMsg.type === 'reply') {
-                    return '';
-                }
-                if (cqMsg.type === 'xml') {
-                    return '';
-                }
                 return cqMsg;
             }));
         }
         cqMessages.splice(0, 2);
-        cqMessages = [fowardMsg, ...cqMessages];
+        cqMessages = [forwardMsg, ...cqMessages];
     }));
     return CQCode.stringifyAll(cqMessages);
 }
