@@ -34,6 +34,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
     try {
         // 把cq消息解码成对象
         let messageContent = qqMessage.message;
+        // 处理转发
+        messageContent = await handlerForward(messageContent);
         // 处理回复
         messageContent = await handlerReply(messageContent);
         // 处理at discord用户
@@ -50,7 +52,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
             }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                const resMessage: Message = await webhook.send(cqMsg, option) as Message;
+                let strMsg = resolveBrackets(cqMsg);
+                const resMessage: Message = await webhook.send(strMsg, option) as Message;
                 await handlerSaveMessage(qqMessage, resMessage);
             } else {
                 // 判断类型在发送对应格式
@@ -96,6 +99,57 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
 function resolveBrackets(msg) {
     msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']')
     return msg
+}
+
+// 处理转发
+async function handlerForward(message: string): Promise<string> {
+    let cqMessages = CQCode.parseAll(message);
+    await Promise.all(cqMessages.map(async (cqMsg) => {
+        if (typeof cqMsg === 'string' || cqMsg.type !== 'forward') {
+            return cqMsg;
+        }
+        const response = await axios.get(config.server + '/get_msg', {
+            params: {
+                message_id: cqMsg.data.id
+            }
+        })
+        const result = response.data;
+        let forwardMsg = ``;
+        if (result.status === 'ok') {
+            const forwardTime = new Date(result.data.time * 1000);
+            const forwardDate = `${forwardTime.getHours()}:${forwardTime.getMinutes()}:${forwardTime.getSeconds()}`;
+
+            forwardMsg = result.data.message;
+            forwardMsg = resolveBrackets(forwardMsg);
+            // 回复的消息是否来自discord
+            const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
+            const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
+            if (refMsg && refMsg.from === 'discord') {
+                // 把来自discord的用户头像去掉
+                const mlist = forwardMsg.match(/\[CQ:image,file=.*] @([\w-_\s]+)#(\d+)/);
+                if (mlist) {
+                    const [m1, m2, m3] = mlist;
+                    forwardMsg = forwardMsg.replace(m1, `@${m2}#${m3}`);
+                }
+            }
+            forwardMsg = forwardMsg.split('\n').join('> ');
+            forwardMsg = '> ' + forwardMsg + '\n';
+            forwardMsg = `> **__转发 @${result.data.sender.nickname} 在 ${forwardDate} 的消息__**\n` + forwardMsg;
+            // 把回复消息里的图片换成点位符,
+            forwardMsg = CQCode.stringifyAll(CQCode.parseAll(forwardMsg).map((cqMsg) => {
+                if (typeof cqMsg === 'string') {
+                    return cqMsg;
+                }
+                if (cqMsg.type === 'image' || cqMsg.type === 'face') {
+                    return `:frame_photo:`;
+                }
+                return cqMsg;
+            }));
+        }
+        cqMessages.splice(0, 2);
+        cqMessages = [forwardMsg, ...cqMessages];
+    }));
+    return CQCode.stringifyAll(cqMessages);
 }
 
 // 处理回复
