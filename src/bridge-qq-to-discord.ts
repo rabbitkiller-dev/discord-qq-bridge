@@ -220,6 +220,9 @@ async function handlerAt(message: string, ctx: { msg: RawSession<'message'>, web
         if (typeof cqMsg === 'string' || cqMsg.type !== 'at') {
             return cqMsg;
         }
+        if(cqMsg.data.qq === 'all'){
+            return `\`@全休成员\``
+        }
         // @ts-ignore
         const user = await koishi.bots[0].getGroupMemberInfo(ctx.msg.groupId, parseInt(cqMsg.data.qq));
         return `\`@${user.card || user.nickname}(${user.userId})\``
@@ -232,17 +235,17 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
     const atList: Array<{ username: string, discriminator: string, origin: string }> = [];
     // 正则匹配
     [
-        /&#91;at:([\w-_\s]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
-        /&#91;@([\w-_\s]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
-        /`at:([\w-_\s]+)#(\d+)`/, // `at:rabbitkiller#7372`
-        /`@([\w-_\s]+)#(\d+)`/, // `@rabbitkiller#7372`
-        /at:([\w-_\s]+)#(\d+)/, // at:rabbitkiller#7372
-        /@([\w-_\s]+)#(\d+)/, // @rabbitkiller#7372
+        /&#91;at:([\w\W-_\s]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
+        /&#91;@([\w\W-_\s]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
+        /`at:([\w\W-_\s]+)#(\d+)`/, // `at:rabbitkiller#7372`
+        /`@([\w\W-_\s]+)#(\d+)`/, // `@rabbitkiller#7372`
+        /at:([\w\W-_\s]+)#(\d+)/, // at:rabbitkiller#7372
+        /@([\w\W-_\s]+)#(\d+)/, // @rabbitkiller#7372
         // 不需要#号的
-        /&#91;at:([\w-_\s]+)&#93;/, // [at:rabbitkiller]
-        /&#91;@([\w-_\s]+)&#93;/, // [@rabbitkiller]
-        /`at:([\w-_\s]+)`/, // `at:rabbitkiller`
-        /`@([\w-_\s]+)`/, // `@rabbitkiller`
+        /&#91;at:([\w\W-_\s]+)&#93;/, // [at:rabbitkiller]
+        /&#91;@([\w\W-_\s]+)&#93;/, // [@rabbitkiller]
+        /`at:([\w\W-_\s]+)`/, // `at:rabbitkiller`
+        /`@([\w\W-_\s]+)`/, // `@rabbitkiller`
     ].forEach((reg) => {
         const gReg = new RegExp(reg.source, 'g');
         const sReg = new RegExp(reg.source);
