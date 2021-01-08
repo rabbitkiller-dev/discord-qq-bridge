@@ -184,9 +184,7 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
         })
     }
     [
-        /\[at:([\w-_\s]+)\]/, // [at:rabbitkiller]
         /\[@([\w-_\s]+)\]/, // [@rabbitkiller]
-        /`at:([\w-_\s]+)`/, // `at:rabbitkiller`
         /`@([\w-_\s]+)`/, // `@rabbitkiller`
     ].forEach((reg) => {
         const gReg = new RegExp(reg.source, 'g');

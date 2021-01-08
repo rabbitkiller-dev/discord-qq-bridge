@@ -235,17 +235,12 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
     const atList: Array<{ username: string, discriminator: string, origin: string }> = [];
     // 正则匹配
     [
-        /&#91;at:([\w\W-_\s]+)#(\d+)&#93;/, // [at:rabbitkiller#7372]
-        /&#91;@([\w\W-_\s]+)#(\d+)&#93;/, // [@rabbitkiller#7372]
-        /`at:([\w\W-_\s]+)#(\d+)`/, // `at:rabbitkiller#7372`
-        /`@([\w\W-_\s]+)#(\d+)`/, // `@rabbitkiller#7372`
-        /at:([\w\W-_\s]+)#(\d+)/, // at:rabbitkiller#7372
-        /@([\w\W-_\s]+)#(\d+)/, // @rabbitkiller#7372
+        /&#91;@([^\n#]+)#(\d\d\d\d)&#93;/, // [@rabbitkiller#7372]
+        /`@([^\n#]+)#(\d\d\d\d)`/, // `@rabbitkiller#7372`
+        /@([^\n#]+)#(\d\d\d\d)/, // @rabbitkiller#7372
         // 不需要#号的
-        /&#91;at:([\w\W-_\s]+)&#93;/, // [at:rabbitkiller]
-        /&#91;@([\w\W-_\s]+)&#93;/, // [@rabbitkiller]
-        /`at:([\w\W-_\s]+)`/, // `at:rabbitkiller`
-        /`@([\w\W-_\s]+)`/, // `@rabbitkiller`
+        /&#91;@([^\n#]+)&#93;/, // [@rabbitkiller]
+        /`@([^\n#]+)`/, // `@rabbitkiller`
     ].forEach((reg) => {
         const gReg = new RegExp(reg.source, 'g');
         const sReg = new RegExp(reg.source);
