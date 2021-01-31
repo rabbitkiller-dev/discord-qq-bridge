@@ -33,6 +33,7 @@
     "canvas": "^2.6.1",
     "dayjs": "^1.9.6",
     "discord.js": "^12.5.1",
+    "el-bot": "^0.7.0-alpha.2",
     "file-type": "^16.0.1",
     "got": "^11.8.1",
     "koishi": "^2.4.2",
