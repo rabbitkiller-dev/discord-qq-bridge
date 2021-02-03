@@ -6,6 +6,7 @@ import {downloadQQImage} from "./utils/download-file";
 import {MessageEntity} from "./entity/message.entity";
 import {DatabaseService} from "./database.service";
 import * as log from '../utils/log5';
+import * as xmlUtil from 'fast-xml-parser';
 
 export default async function () {
   ElAndDiscordService.qqBot.mirai.on('GroupMessage', async (qqMsg) => {
@@ -42,8 +43,11 @@ async function toDiscord(qqMsg: MessageType.GroupMessage) {
           messageContent += msg.text;
           break;
         case 'At':
-          const memberInfo = await ElAndDiscordService.qqBot.mirai.api.memberInfo(qqMsg.sender.group.id, msg.target);
-          messageContent += `\`@${memberInfo.name}(${msg.target})\``;
+          const memberInfos = await ElAndDiscordService.qqBot.mirai.api.memberList(qqMsg.sender.group.id);
+          const memberInfo = memberInfos.find(member => member.id === msg.target);
+          if(memberInfo){
+            messageContent += `\`@${memberInfo.memberName}(${msg.target})\``;
+          }
           break;
         case 'AtAll':
           messageContent += `@everyone`;
@@ -55,6 +59,15 @@ async function toDiscord(qqMsg: MessageType.GroupMessage) {
           const filePath = await downloadQQImage({url: msg.url});
           const attr = new MessageAttachment(filePath);
           option.files.push(attr);
+          break;
+        case 'Xml':
+          messageContent += await handlerXml(msg);
+          break;
+        case 'App':
+          const content = JSON.parse(msg.content) as any;
+          messageContent += `> ** ${content.prompt} **\n`
+          messageContent += `> ${content.meta.detail_1.desc}\n`
+          messageContent += `> ${content.meta.detail_1.qqdocurl}\n`
           break;
         default:
           messageContent += JSON.stringify(msg);
@@ -113,9 +126,34 @@ async function handlerForward(quoteMsg: MessageType.Quote): Promise<string> {
     }
   }
 
-  messageContent = messageContent.split('\n').map((str) => '> ' + str).join('\n')
+  messageContent = messageContent.split('\n').map((str) => '> ' + str).join('\n') + '\n'
   return messageContent;
 }
+// 处理Xml消息
+async function handlerXml(msg: MessageType.Xml): Promise<string> {
+  let messageContent = '';
+  const xmlData = xmlUtil.parse(msg.xml, {
+    attributeNamePrefix: '',
+    attrNodeName: 'attribute',
+    ignoreAttributes: false,
+  });
+  if(xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '1') {
+    messageContent += `> ** 转发消息 **\n`
+    messageContent += `> ${xmlData.msg.item.summary}\n`
+    messageContent += `> ${xmlData.msg.attribute.url}\n`
+  } else if(xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '35') {
+    messageContent += `> ** 转发消息 **\n`
+    xmlData.msg.title.forEach((title)=>{
+      messageContent += `> ${title['#text']}\n`;
+    })
+  } else {
+    messageContent = JSON.stringify(msg.xml)
+  }
+
+  return messageContent;
+}
+
+
 
 // 处理@ discord用户
 async function handlerAtDiscordUser(message: string, webhook: Webhook): Promise<string> {

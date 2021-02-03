@@ -9,6 +9,7 @@ import * as md5 from "md5";
 export const cacheDir = path.join(__dirname, '../../cache');
 export const imageCacheDir = path.join(cacheDir, 'images');
 export const imageDiscordAvatarCacheDir = path.join(cacheDir, 'images/discord-avatar');
+export const imageDiscordAttachmentCacheDir = path.join(cacheDir, 'images/discord-attachment');
 export const imageQQEmojiCacheDir = path.join(cacheDir, 'images/qq-emoji');
 
 async function initCache() {
@@ -23,6 +24,9 @@ async function initCache() {
     }
     if (!fs.existsSync(imageQQEmojiCacheDir)) {
         fs.mkdirSync(imageQQEmojiCacheDir);
+    }
+    if (!fs.existsSync(imageDiscordAttachmentCacheDir)) {
+        fs.mkdirSync(imageDiscordAttachmentCacheDir);
     }
 }
 
@@ -75,5 +79,37 @@ export async function downloadQQImage(params: { url: string, cache?: boolean }):
         got.stream(params.url).pipe(writeStream).on("close", () => {
             resolve(localPath)
         })
+    })
+};
+// 下载discord附件并缓存
+export async function downloadDiscordAttachment(params: { url: string, cache?: boolean }): Promise<string> {
+    params = Object.assign({cache: true}, params);
+    await initCache();
+    const fileMD5Name = md5(params.url);
+    const isExists = fs.readdirSync(imageDiscordAttachmentCacheDir).find((file) => file.startsWith(fileMD5Name));
+    if (isExists && params.cache) {
+        return path.join(imageDiscordAttachmentCacheDir, isExists);
+    }
+    const filename = `${md5(params.url)}${path.extname(params.url)}`;
+    const localPath = path.join(imageDiscordAttachmentCacheDir, filename);
+    let writeStream = fs.createWriteStream(localPath);
+
+    return new Promise((resolve, reject) => {
+        request.defaults({proxy: config.proxy, timeout: 60000})
+          .get(params.url)
+          .on('response', function (response) {
+              if (response.statusCode !== 200) {
+                  reject(`下载失败,请检查网络或代理${response.statusCode}:${params.url}`);
+              }
+              response.on('data', (chunk) => {
+                  writeStream.write(chunk);
+              }).on('end', () => {
+                  writeStream.close();
+                  resolve(localPath)
+              });
+          })
+          .on('error', function (err) {
+              reject(err);
+          })
     })
 };
