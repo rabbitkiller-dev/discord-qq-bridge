@@ -70,20 +70,20 @@ export async function toQQ(msg: Message) {
         if (temps.length > 0) {
             const msgID = await koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
             const qqMessage = await koishi.bots[0].getMsg(msgID)
-            await handlerSaveMessage(qqMessage, msg);
+            handlerSaveMessage(qqMessage, msg).then();
             sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
         } else {
             temps.push('不支持该消息');
             const msgID = await koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
             const qqMessage = await koishi.bots[0].getMsg(msgID)
-            await handlerSaveMessage(qqMessage, msg);
+            handlerSaveMessage(qqMessage, msg).then();
             sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
         }
     } catch (error) {
         log.error(error);
-        const msgID = await koishi.bots[0].sendGroupMsg(bridge.qqGroup, '发生错误导致消息同步失败');
+        const msgID = await koishi.bots[0].sendGroupMsg(bridge.qqGroup, `发生错误导致消息同步失败:DiscordMsgID=${msg.id} \n${msg.content}`);
         const qqMessage = await koishi.bots[0].getMsg(msgID)
-        await handlerSaveMessage(qqMessage, msg);
+        handlerSaveMessage(qqMessage, msg).then();
     }
 }
 

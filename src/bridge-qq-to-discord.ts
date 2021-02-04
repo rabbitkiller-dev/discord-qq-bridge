@@ -54,7 +54,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
             if (typeof cqMsg === 'string') {
                 let strMsg = resolveBrackets(cqMsg);
                 const resMessage: Message = await webhook.send(strMsg, option) as Message;
-                await handlerSaveMessage(qqMessage, resMessage);
+                handlerSaveMessage(qqMessage, resMessage).then();
             } else {
                 // 判断类型在发送对应格式
                 switch (cqMsg.type) {
@@ -66,7 +66,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
                             files: [attr],
                             ...option
                         }) as Message;
-                        await handlerSaveMessage(qqMessage, resMessage);
+                        handlerSaveMessage(qqMessage, resMessage).then();
                         break;
                     }
                     case 'face': {
@@ -76,13 +76,13 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
                             files: [attr],
                             ...option
                         }) as Message;
-                        await handlerSaveMessage(qqMessage, resMessage);
+                        handlerSaveMessage(qqMessage, resMessage).then();
                         break;
                     }
                     default: {
                         log.error(`没有处理过的消息: ${JSON.stringify(cqMsg)}`)
                         const resMessage = await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option) as Message;
-                        await handlerSaveMessage(qqMessage, resMessage);
+                        handlerSaveMessage(qqMessage, resMessage).then();
                     }
                 }
             }
@@ -90,8 +90,8 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
         sysLog('⇿', 'QQ消息已推送到Discord', qqMessage.sender.nickname, qqMessage.message)
     } catch (error) {
         log.error(error);
-        const resMessage = await webhook.send('发生错误导致消息同步失败') as Message;
-        await handlerSaveMessage(qqMessage, resMessage);
+        const resMessage = await webhook.send(`发生错误导致消息同步失败:QQMsgID=${qqMessage.messageId} \n${qqMessage.message}`) as Message;
+        handlerSaveMessage(qqMessage, resMessage).then();
     }
 }
 
