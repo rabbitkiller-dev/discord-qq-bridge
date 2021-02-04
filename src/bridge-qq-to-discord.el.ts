@@ -1,4 +1,4 @@
-import config from "../koishi.config";
+import config from "../el.config";
 import {MessageType} from "mirai-ts";
 import {Guild, Message, Message as DiscordMessage, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {ElAndDiscordService} from "./elAndDiscord.service";
