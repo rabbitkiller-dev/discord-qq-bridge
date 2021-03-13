@@ -255,9 +255,9 @@ async function handlerLongUrlToShortUrl(message: string, ctx: { msg: Message, br
     for (const url of urls){
       const result = await longUrlIntoShotUrl(encodeURI(url))
       footerCode.push(`\n[→ ${url}]`)
-      newMessage = newMessage.replace(url, result.shortLink)
+      newMessage = newMessage.replace(url, `<${result.shortLink}>`)
     }
-    return newMessage + '\n' + footerCode.join();
+    return newMessage + '\n' + footerCode.join('');
   } catch (e) {
     return message + '[error: 长链接转换出错]';
   }
