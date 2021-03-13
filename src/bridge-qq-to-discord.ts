@@ -4,21 +4,13 @@ import config from "../koishi.config";
 import axios from "axios";
 import * as md5 from "md5";
 import * as log from "../utils/log5";
-import {CqHttpApi} from "../utils/cqhttp.api";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
-import {downloadImage, downloadQQImage} from "./utils/download-file";
+import {downloadQQImage} from "./utils/download-file";
+import {KoishiAndDiscordService} from "./koishiAndDiscord.service";
 
-const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
-let discord: Client;
-let koishi: App
-export default async function (ctx: {
-    discord: Client,
-    koishi: App
-}) {
-    koishi = ctx.koishi;
-    discord = ctx.discord;
-    koishi.group(...config.bridges.map(b => b.qqGroup)).on('message', async (qqMessage) => {
+export default async function () {
+    KoishiAndDiscordService.qqBot.group(...config.bridges.map(b => b.qqGroup)).on('message', async (qqMessage) => {
         await toDiscord(qqMessage);
     });
 }
@@ -29,9 +21,9 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
     if (!bridge) {
         return;
     }
-    // 获取webhook
-    const webhook = await discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
     try {
+        // 获取webhook
+        const webhook = await KoishiAndDiscordService.discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
         // 把cq消息解码成对象
         let messageContent = qqMessage.message;
         // 处理转发
@@ -43,13 +35,14 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
         // 处理at
         messageContent = await handlerAt(messageContent, {msg: qqMessage, webhook: webhook});
         const cqMessages = CQCode.parseAll(messageContent);
+        const option: WebhookMessageOptions = {
+            username: `${qqMessage.sender.card || qqMessage.sender.nickname}(${qqMessage.sender.userId})`,
+            avatarURL: `https://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100&t=${Math.random()}`,
+            // avatarURL: `https://q.qlogo.cn/g?b=qq&nk={uid}&s=100&t={Math.random()}
+            // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
+            files: [],
+        }
         for (const cqMsg of cqMessages) {
-            const option: WebhookMessageOptions = {
-                username: `${qqMessage.sender.card || qqMessage.sender.nickname}(${qqMessage.sender.userId})`,
-                avatarURL: `https://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100&t=${Math.random()}`
-                // avatarURL: `https://q.qlogo.cn/g?b=qq&nk={uid}&s=100&t={Math.random()}
-                // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
-            }
             // 文字直接发送
             if (typeof cqMsg === 'string') {
                 let strMsg = resolveBrackets(cqMsg);
@@ -87,10 +80,18 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
                 }
             }
         }
-        sysLog('⇿', 'QQ消息已推送到Discord', qqMessage.sender.nickname, qqMessage.message)
+        log.message('⇿', 'QQ消息已推送到Discord', qqMessage.sender.nickname, qqMessage.message)
     } catch (error) {
         log.error(error);
-        const resMessage = await webhook.send(`发生错误导致消息同步失败:QQMsgID=${qqMessage.messageId} \n${qqMessage.message}`) as Message;
+        const webhook = await KoishiAndDiscordService.discord.fetchWebhook(bridge.discord.id, bridge.discord.token);
+        const option: WebhookMessageOptions = {
+            username: `${qqMessage.sender.card || qqMessage.sender.nickname}(${qqMessage.sender.userId})`,
+            avatarURL: `https://q1.qlogo.cn/g?b=qq&nk=${qqMessage.sender.userId}&s=100&t=${Math.random()}`,
+            // avatarURL: `https://q.qlogo.cn/g?b=qq&nk={uid}&s=100&t={Math.random()}
+            // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
+            files: [],
+        }
+        const resMessage = await webhook.send(`发生错误导致消息同步失败:QQMsgID=${qqMessage.messageId} \n${qqMessage.message}`, option) as Message;
         handlerSaveMessage(qqMessage, resMessage).then();
     }
 }
@@ -224,7 +225,7 @@ async function handlerAt(message: string, ctx: { msg: RawSession<'message'>, web
             return `\`@全休成员\``
         }
         // @ts-ignore
-        const user = await koishi.bots[0].getGroupMemberInfo(ctx.msg.groupId, parseInt(cqMsg.data.qq));
+        const user = await KoishiAndDiscordService.qqBot.bots[0].getGroupMemberInfo(ctx.msg.groupId, parseInt(cqMsg.data.qq));
         return `\`@${user.card || user.nickname}(${user.userId})\``
     }));
     return CQCode.stringifyAll(cqMessages);
@@ -262,7 +263,7 @@ async function handlerAtDiscordUser(message: string, ctx: { msg: RawSession<'mes
         return message;
     }
     // 获取guild, 在通过guild获取所有用户
-    const guild: Guild = await discord.guilds.fetch(ctx.webhook.guildID);
+    const guild: Guild = await KoishiAndDiscordService.discord.guilds.fetch(ctx.webhook.guildID);
     const fetchedMembers = await guild.members.fetch();
     fetchedMembers.forEach((member) => {
         // 匹配用户名
