@@ -1,4 +1,12 @@
-import {Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
+import {
+    Client,
+    Guild,
+    Message as DiscordMessage,
+    Message,
+    MessageAttachment,
+    Webhook,
+    WebhookMessageOptions
+} from "discord.js";
 import {App, CQCode, RawSession} from 'koishi';
 import config from "../koishi.config";
 import axios from "axios";
@@ -42,12 +50,11 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
             // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
             files: [],
         }
+        messageContent = '';
         for (const cqMsg of cqMessages) {
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                let strMsg = resolveBrackets(cqMsg);
-                const resMessage: Message = await webhook.send(strMsg, option) as Message;
-                handlerSaveMessage(qqMessage, resMessage).then();
+                messageContent += resolveBrackets(cqMsg);
             } else {
                 // 判断类型在发送对应格式
                 switch (cqMsg.type) {
@@ -55,31 +62,22 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
                     case 'image': {
                         const filePath = await downloadQQImage({url: cqMsg.data.url});
                         const attr = new MessageAttachment(filePath);
-                        const resMessage = await webhook.send({
-                            files: [attr],
-                            ...option
-                        }) as Message;
-                        handlerSaveMessage(qqMessage, resMessage).then();
+                        option.files.push(attr);
                         break;
                     }
                     case 'face': {
-                        const attr = new MessageAttachment(`https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/${cqMsg.data.id}.gif`);
-                        attr.setName(`${cqMsg.data.id}.gif`);
-                        const resMessage = await webhook.send({
-                            files: [attr],
-                            ...option
-                        }) as Message;
-                        handlerSaveMessage(qqMessage, resMessage).then();
+                        messageContent += `[Face=${cqMsg.data.id}]`;
                         break;
                     }
                     default: {
-                        log.error(`没有处理过的消息: ${JSON.stringify(cqMsg)}`)
-                        const resMessage = await webhook.send(CQCode.stringify(cqMsg.type, cqMsg.data), option) as Message;
-                        handlerSaveMessage(qqMessage, resMessage).then();
+                        messageContent += JSON.stringify(cqMsg);
                     }
                 }
             }
         }
+        // 发送消息
+        const resMessage: Message = await webhook.send(messageContent, option) as Message;
+        handlerSaveMessage(qqMessage, resMessage).then();
         log.message('⇿', 'QQ消息已推送到Discord', qqMessage.sender.nickname, qqMessage.message)
     } catch (error) {
         log.error(error);

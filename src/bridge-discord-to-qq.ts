@@ -49,13 +49,14 @@ export async function toQQ(msg: Message) {
     // 没有内容时不处理
     if (msg.content.trim()) {
       messageContent = `${messageContent}\n${msg.content}`;
+      // 转换长链接
+      messageContent = await handlerLongUrlToShortUrl(messageContent, {msg: msg, bridge: bridge});
       // 处理回复
       messageContent = await parseEmoji(messageContent);
       // 处理回复
       messageContent = await handlerReply(messageContent, {msg: msg, bridge: bridge});
       messageContent = await handlerAt(messageContent, {msg: msg, bridge: bridge});
       messageContent = await handlerAtQQUser(messageContent, {msg: msg, bridge: bridge});
-      messageContent = await handlerLongUrlToShortUrl(messageContent, {msg: msg, bridge: bridge});
     }
     temps.push(messageContent);
     if (msg.attachments.size > 0) {
@@ -253,6 +254,10 @@ async function handlerLongUrlToShortUrl(message: string, ctx: { msg: Message, br
     let newMessage = message;
     let footerCode = [];
     for (const url of urls){
+      // discord的gif图
+      if(/https:\/\/tenor\.com\/view\/([\w]+-)+[0-9]+/.test(url)){
+        continue;
+      }
       const result = await longUrlIntoShotUrl(encodeURI(url))
       footerCode.push(`\n[→ ${url}]`)
       newMessage = newMessage.replace(url, `<${result.shortLink}>`)
