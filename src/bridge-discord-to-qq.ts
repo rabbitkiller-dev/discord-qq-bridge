@@ -258,7 +258,7 @@ async function handlerLongUrlToShortUrl(message: string, ctx: { msg: Message, br
       if(/https:\/\/tenor\.com\/view\/([\w]+-)+[0-9]+/.test(url)){
         continue;
       }
-      const result = await longUrlIntoShotUrl(encodeURI(url))
+      const result = await longUrlIntoShotUrl(url)
       footerCode.push(`\n[→ ${url}]`)
       newMessage = newMessage.replace(url, `<${result.shortLink}>`)
     }
