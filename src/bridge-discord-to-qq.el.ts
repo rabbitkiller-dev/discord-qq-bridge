@@ -1,11 +1,11 @@
 import {Message as DiscordMessage, Message} from "discord.js";
 import {Message as MiraiMessage, MessageType} from 'mirai-ts';
 import {CQCode} from 'koishi';
-import config from "../el.config";
+import config from "./el.config";
 import * as path from "path";
 import * as fs from "fs";
-import * as log from "../utils/log5";
-import {BridgeConfig} from "../interface";
+import * as log from "./utils/log5";
+import {BridgeConfig} from "./interface";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
 import {createCanvas, loadImage} from "canvas";

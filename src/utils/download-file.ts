@@ -1,15 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as request from 'request';
-import config from "../../koishi.config";
+import config from "../koishi.config";
 import got from "got";
 import * as FileType from "file-type";
 import * as md5 from "md5";
 
 export const cacheDir = path.join(__dirname, '../../cache');
 export const imageCacheDir = path.join(cacheDir, 'images');
-export const imageDiscordAvatarCacheDir = path.join(cacheDir, 'images/discord-avatar');
-export const imageDiscordAttachmentCacheDir = path.join(cacheDir, 'images/discord-attachment');
+export const imageDiscordAvatarCacheDir = path.join(cacheDir, 'images/bridge-avatar');
+export const imageDiscordAttachmentCacheDir = path.join(cacheDir, 'images/bridge-attachment');
 export const imageQQEmojiCacheDir = path.join(cacheDir, 'images/qq-emoji');
 
 async function initCache() {

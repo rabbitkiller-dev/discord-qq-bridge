@@ -1,5 +1,5 @@
 // const Bot = require("el-bot");
-import * as log from './utils/log5';
+import * as log from './src/utils/log5';
 
 import {DatabaseService} from "./src/database.service";
 import {ElAndDiscordService} from "./src/elAndDiscord.service";

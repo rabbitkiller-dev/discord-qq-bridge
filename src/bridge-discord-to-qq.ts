@@ -1,13 +1,13 @@
 import { Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOptions } from "discord.js";
 import { App, CQCode, RawSession, MessageInfo } from 'koishi';
-import config from "../koishi.config";
+import config from "./koishi.config";
 import * as md5 from "md5";
 import * as fs from "fs";
 import * as path from "path";
 import * as request from 'request';
-import * as log from "../utils/log5";
+import * as log from "./utils/log5";
 import { GroupMemberInfo } from "koishi-adapter-cqhttp";
-import { BridgeConfig } from "../interface";
+import { BridgeConfig } from "./interface";
 import { DatabaseService } from "./database.service";
 import { MessageEntity } from "./entity/message.entity";
 import { createCanvas, loadImage } from "canvas";
@@ -15,8 +15,8 @@ import { KoishiAndDiscordService } from "./koishiAndDiscord.service";
 import { downloadImage, imageCacheDir, imageDiscordAvatarCacheDir } from "./utils/download-file";
 import { MatchUrlFromText } from './utils/match-url-from-text';
 import { longUrlIntoShotUrl } from './utils/longurl-into-shoturl';
+import { DToQUserLimitEntity } from './entity/dToQ-user-limit.entity';
 
-const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 export default async function () {
   KoishiAndDiscordService.discord.on('message', async (msg) => {
     if (msg.content === '!ping') {
@@ -36,12 +36,19 @@ export async function toQQ(msg: Message) {
   if (msg.author.id === config.discordBot || (config.bridges.find(opt => opt.discord.id === msg.author.id))) {
     return;
   }
-  // 查询这个频道是否需要通知到群
   const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
+  // 查询这个频道是否需要通知到qq群
+  if (!bridge) {
+    return;
+  }
+  // 查询这个用户是否能同步到qq群
+  const dToQUserLimitRepo = DatabaseService.connection.getRepository(DToQUserLimitEntity);
+  const limit = await dToQUserLimitRepo.find({channel: msg.channel.id, user: msg.author.id});
+  if (limit && limit.length > 0) {
+    msg.reply('你的回复不会同步到qq群')
+    return;
+  }
   try {
-    if (!bridge) {
-      return;
-    }
     const temps: any[] = [];
     // 添加用户名称在信息前面
     let messageContent = `[Discord] @${msg.author.username}#${msg.author.discriminator}`;
@@ -69,13 +76,13 @@ export async function toQQ(msg: Message) {
       const msgID = await KoishiAndDiscordService.qqBot.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
       const qqMessage = await KoishiAndDiscordService.qqBot.bots[0].getMsg(msgID)
       handlerSaveMessage(qqMessage, msg).then();
-      sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+      log.message('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
     } else {
       temps.push('不支持该消息');
       const msgID = await KoishiAndDiscordService.qqBot.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
       const qqMessage = await KoishiAndDiscordService.qqBot.bots[0].getMsg(msgID)
       handlerSaveMessage(qqMessage, msg).then();
-      sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
+      log.message('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
     }
   } catch (error) {
     log.error(error);
@@ -253,9 +260,9 @@ async function handlerLongUrlToShortUrl(message: string, ctx: { msg: Message, br
   try {
     let newMessage = message;
     let footerCode = [];
-    for (const url of urls){
+    for (const url of urls) {
       // discord的gif图
-      if(/https:\/\/tenor\.com\/view\/([\w]+-)+[0-9]+/.test(url)){
+      if (/https:\/\/tenor\.com\/view\/([\w]+-)+[0-9]+/.test(url)) {
         continue;
       }
       const result = await longUrlIntoShotUrl(url)

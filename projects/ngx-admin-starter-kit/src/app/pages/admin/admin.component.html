@@ -1,0 +1,19 @@
+<nb-card>
+  <nb-card-header>
+    限制Discord用户在该频道发言不同步消息至QQ
+  </nb-card-header>
+
+  <nb-card-body>
+    <div class="form-group row">
+      <label for="guild" class="label col-sm-3 col-form-label">选择伺服务器</label>
+      <div class="col-sm-9">
+        <nb-select selected="1" style="width: 100%;max-width: 100%;" id="guild" (selectedChange)="onSelectedChange($event)">
+          <nb-option [value]="option.id" *ngFor="let option of adminService.guilds">{{option.name}}</nb-option>
+        </nb-select>
+      </div>
+    </div>
+
+    <ng2-smart-table [settings]="settings" [source]="source" (deleteConfirm)="onDeleteConfirm($event)" (createConfirm)="onCreateConfirm($event)">
+    </ng2-smart-table>
+  </nb-card-body>
+</nb-card>

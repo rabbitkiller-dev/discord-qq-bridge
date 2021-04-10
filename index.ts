@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import 'koishi-adapter-cqhttp';
-import * as log from './utils/log5';
+import * as log from './src/utils/log5';
 import bridgeQQToDiscord from './src/bridge-qq-to-discord';
 import bridgeDiscordToQQ from './src/bridge-discord-to-qq';
 import {DatabaseService} from "./src/database.service";

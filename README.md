@@ -33,7 +33,7 @@ discordBot: '',
 discordBotToken: '',
     bridges: [
         {
-            discord: {
+            bridge: {
                 id: '', // 频道webhook id
                 token: '', // 频道webhook token
                 channelID: '', // 频道id

@@ -1,6 +1,6 @@
-import config from '../koishi.config';
+import config from './koishi.config';
 import {Client, Intents} from 'discord.js';
-import * as log from "../utils/log5";
+import * as log from "./utils/log5";
 import {App} from "koishi";
 import * as pluginCommon from "koishi-plugin-common";
 

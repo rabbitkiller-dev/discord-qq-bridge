@@ -1,11 +1,11 @@
-import config from "../el.config";
+import config from "./el.config";
 import {MessageType} from "mirai-ts";
 import {Guild, Message, Message as DiscordMessage, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {ElAndDiscordService} from "./elAndDiscord.service";
 import {downloadQQImage} from "./utils/download-file";
 import {MessageEntity} from "./entity/message.entity";
 import {DatabaseService} from "./database.service";
-import * as log from '../utils/log5';
+import * as log from './utils/log5';
 import * as xmlUtil from 'fast-xml-parser';
 
 export default async function () {

@@ -8,10 +8,10 @@ import {
     WebhookMessageOptions
 } from "discord.js";
 import {App, CQCode, RawSession} from 'koishi';
-import config from "../koishi.config";
+import config from "./koishi.config";
 import axios from "axios";
 import * as md5 from "md5";
-import * as log from "../utils/log5";
+import * as log from "./utils/log5";
 import {DatabaseService} from "./database.service";
 import {MessageEntity} from "./entity/message.entity";
 import {downloadQQImage} from "./utils/download-file";

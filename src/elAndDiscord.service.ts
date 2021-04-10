@@ -1,7 +1,7 @@
 import {default as Bot} from "el-bot";
-import config from '../el.config';
+import config from './el.config';
 import {Client, Intents} from 'discord.js';
-import * as log from "../utils/log5";
+import * as log from "./utils/log5";
 
 class _ElAndDiscordService {
   discord: Client;
