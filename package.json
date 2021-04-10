@@ -43,7 +43,6 @@
     "@nestjs/platform-express": "^7.6.13",
     "@nestjs/typeorm": "^7.1.5",
     "axios": "^0.21.0",
-    "bufferutil": "^4.0.3",
     "canvas": "^2.6.1",
     "dayjs": "^1.9.6",
     "discord.js": "^12.5.3",
@@ -60,8 +59,7 @@
     "rxjs": "^6.6.6",
     "shortid": "^2.2.16",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.31",
-    "utf-8-validate": "^5.0.4"
+    "typeorm": "^0.2.31"
   },
   "devDependencies": {
     "koishi-test-utils": "^5.0.3",
