@@ -33,7 +33,7 @@ export default async function (ctx: {
             return;
         }
         const temps: any[] = [
-            '[Discord] @' + msg.author.username + '#' + msg.author.discriminator
+            '[Discord] ' + msg.author.username + '#' + msg.author.discriminator
         ];
         // 没有内容时不处理
         if (msg.content.trim()) {
