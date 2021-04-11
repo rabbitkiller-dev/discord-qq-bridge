@@ -5,17 +5,20 @@ import config from '../koishi.config';
 
 describe('bridge-discord-to-qq.spec.ts', () => {
   beforeAll(async ()=>{
-    // 需要Intents允许一些行为(要获取频道的用户必须需要)
-    const intents = new Intents([
-      Intents.NON_PRIVILEGED, // include all non-privileged intents, would be better to specify which ones you actually need
-      "GUILD_MEMBERS", // lets you request guild members (i.e. fixes the issue)
-    ]);
-    const discord = new Client({ ws: { intents } });
-    const koishi = new App(config);
-    await bridgeDiscordToQQ({discord: discord, koishi: koishi});
   });
   it('parseEmoji', async () => {
   });
   it('handlerAt', async () => {
+  });
+  it('handlerAtDiscordUser', async () => {
+    const matchs = `[Discord] @カノープス・カリーナ#8351
+    @rabbitkiller#1234 @没有RE0看【#1234
+      `.match(/@([^\n#]+)#(\d\d\d\d)/g);
+    expect(matchs[0]).toBe('@カノープス・カリーナ#8351')
+    expect(matchs[1]).toBe('@rabbitkiller#1234')
+    expect(matchs[2]).toBe('@没有RE0看【#1234')
+    const m1 = '@カノープス・カリーナ#8351'.match(/@([^\n#]+)#(\d\d\d\d)/);
+    expect(m1[1]).toBe('カノープス・カリーナ')
+    expect(m1[2]).toBe('8351')
   });
 });

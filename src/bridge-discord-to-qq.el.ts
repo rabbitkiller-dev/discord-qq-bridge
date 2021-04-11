@@ -1,31 +1,22 @@
-import { Client, Guild, Message, MessageAttachment, Webhook, WebhookMessageOptions } from "discord.js";
-import { App, CQCode, RawSession, MessageInfo } from 'koishi';
-import config from "../koishi.config";
-import * as md5 from "md5";
-import * as fs from "fs";
+import {Message as DiscordMessage, Message} from "discord.js";
+import {Message as MiraiMessage, MessageType} from 'mirai-ts';
+import {CQCode} from 'koishi';
+import config from "../el.config";
 import * as path from "path";
-import * as request from 'request';
+import * as fs from "fs";
 import * as log from "../utils/log5";
-import { GroupMemberInfo } from "koishi-adapter-cqhttp";
-import { BridgeConfig } from "../interface";
-import { DatabaseService } from "./database.service";
-import { MessageEntity } from "./entity/message.entity";
-import { createCanvas, loadImage } from "canvas";
-import { KoishiAndDiscordService } from "./koishiAndDiscord.service";
-import { downloadImage, imageCacheDir, imageDiscordAvatarCacheDir } from "./utils/download-file";
-import { MatchUrlFromText } from './utils/match-url-from-text';
-import { longUrlIntoShotUrl } from './utils/longurl-into-shoturl';
+import {BridgeConfig} from "../interface";
+import {DatabaseService} from "./database.service";
+import {MessageEntity} from "./entity/message.entity";
+import {createCanvas, loadImage} from "canvas";
+import {downloadDiscordAttachment, downloadImage, imageDiscordAvatarCacheDir} from "./utils/download-file";
+import {ElAndDiscordService} from "./elAndDiscord.service";
 
-const {sysLog} = require('../utils/sysLog'); // sysLog 保存日志
 export default async function () {
-  KoishiAndDiscordService.discord.on('message', async (msg) => {
+  ElAndDiscordService.discord.on('message', async (msg) => {
     if (msg.content === '!ping') {
       msg.channel.send('Pong.');
     }
-    log.message(`[Discord Start] -----------------------------------------`);
-    log.message(`[author.id=${msg.author.id}] [channel.id=${msg.channel.id}] [username=${msg.author.username + '#' + msg.author.discriminator}]`);
-    log.message(`[content=${msg.content}]`);
-    log.message(`[Discord End]`);
     await toQQ(msg);
   });
 }
@@ -38,51 +29,97 @@ export async function toQQ(msg: Message) {
   }
   // 查询这个频道是否需要通知到群
   const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
+  if (!bridge) {
+    return;
+  }
   try {
-    if (!bridge) {
-      return;
-    }
+    let quote = undefined;
+    const msgChain: MessageType.MessageChain = [];
     const temps: any[] = [];
+
+    // 处理回复
+    if (msg.reference && msg.reference.messageID) {
+      const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
+      const refMsg = await messageRepo.findOne({discordMessageID: msg.reference.messageID});
+      // 尝试查找discord对应的qq消息id
+      if (refMsg) {
+        quote = refMsg.qqMessageID;
+      } else {
+        // 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
+        const channel: any = await ElAndDiscordService.discord.channels.fetch(msg.channel.id);
+        const replyMsg = await channel.messages.fetch(msg.reference.messageID);
+        msgChain.push(MiraiMessage.Plain(`回复消息：${replyMsg.content}\n`))
+      }
+    }
+
     // 添加用户名称在信息前面
-    let messageContent = `[Discord] @${msg.author.username}#${msg.author.discriminator}`;
-    // let messageContent = await handlerUserAvatar(msg.content, {msg: msg, bridge: bridge});
+    msgChain.push(await handlerUserAvatar(msg));
+    msgChain.push(MiraiMessage.Plain(`@${msg.author.username}#${msg.author.discriminator}\n`));
+
     // 没有内容时不处理
     if (msg.content.trim()) {
-      messageContent = `${messageContent}\n${msg.content}`;
-      // 转换长链接
-      messageContent = await handlerLongUrlToShortUrl(messageContent, {msg: msg, bridge: bridge});
+      let messageContent = msg.content;
       // 处理回复
       messageContent = await parseEmoji(messageContent);
-      // 处理回复
-      messageContent = await handlerReply(messageContent, {msg: msg, bridge: bridge});
+      // 处理@
       messageContent = await handlerAt(messageContent, {msg: msg, bridge: bridge});
       messageContent = await handlerAtQQUser(messageContent, {msg: msg, bridge: bridge});
+
+      const cqMsg = CQCode.parseAll(messageContent);
+      for(let source of cqMsg){
+        if (typeof source === "string") {
+          msgChain.push(MiraiMessage.Plain(source))
+        } else {
+          switch (source.type) {
+            case 'at':
+              msgChain.push(MiraiMessage.At(source.data.qq as any))
+              break;
+            case 'image':
+              const filePath = await downloadDiscordAttachment({url: source.data.file});
+              const relativePath = path.relative('./mcl/data/net.mamoe.mirai-api-http/images', filePath);
+              msgChain.push(MiraiMessage.Image(null, null, relativePath))
+              break;
+            default:
+              msgChain.push(MiraiMessage.Plain(JSON.stringify(source)))
+          }
+        }
+      }
     }
-    temps.push(messageContent);
     if (msg.attachments.size > 0) {
       const attachments = msg.attachments.array();
       for (let attachment of attachments) {
-        temps.push(CQCode.stringify('image', {file: attachment.url}))
+        const filePath = await downloadDiscordAttachment({url: attachment.url});
+        const relativePath = path.relative('./mcl/data/net.mamoe.mirai-api-http/images', filePath);
+        msgChain.push(MiraiMessage.Image(null, null, relativePath))
       }
     }
-    if (temps.length > 0) {
-      const msgID = await KoishiAndDiscordService.qqBot.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
-      const qqMessage = await KoishiAndDiscordService.qqBot.bots[0].getMsg(msgID)
-      handlerSaveMessage(qqMessage, msg).then();
-      sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
-    } else {
-      temps.push('不支持该消息');
-      const msgID = await KoishiAndDiscordService.qqBot.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
-      const qqMessage = await KoishiAndDiscordService.qqBot.bots[0].getMsg(msgID)
-      handlerSaveMessage(qqMessage, msg).then();
-      sysLog('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
-    }
+    const res = await ElAndDiscordService.qqBot.mirai.api.sendGroupMessage(msgChain, bridge.qqGroup, quote);
+    const resMessage = await ElAndDiscordService.qqBot.mirai.api.messageFromId(res.messageId);
+    handlerSaveMessage(resMessage as MessageType.GroupMessage, msg).then();
+    // const msgID = await koishi.bots[0].sendGroupMsg(bridge.qqGroup, temps.join('\n'));
+    // const qqMessage = await koishi.bots[0].getMsg(msgID)
+    // await handlerSaveMessage(qqMessage, msg);
+    log.message('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
   } catch (error) {
     log.error(error);
-    const msgID = await KoishiAndDiscordService.qqBot.bots[0].sendGroupMsg(bridge.qqGroup, `发生错误导致消息同步失败:DiscordMsgID=${msg.id} \n${msg.content}`);
-    const qqMessage = await KoishiAndDiscordService.qqBot.bots[0].getMsg(msgID)
-    handlerSaveMessage(qqMessage, msg).then();
+    const res = await ElAndDiscordService.qqBot.mirai.api.sendGroupMessage(`发生错误导致消息同步失败 来自discordMsgId=${msg.id}`, bridge.qqGroup);
+    const resMessage = await ElAndDiscordService.qqBot.mirai.api.messageFromId(res.messageId);
+    handlerSaveMessage(resMessage as MessageType.GroupMessage, msg).then();
   }
+}
+
+export async function translateCQCodeToMsgChain(cqMsg: string): Promise<MessageType.MessageChain> {
+  const chain: MessageType.MessageChain = [];
+  CQCode.parseAll(cqMsg).forEach((source) => {
+    if (typeof source === "string") {
+      chain.push(MiraiMessage.Plain(source))
+    } else {
+      switch (source.type) {
+      }
+    }
+
+  })
+  return chain;
 }
 
 // 把表情解析成cq:image
@@ -110,8 +147,8 @@ export async function parseEmoji(message: string): Promise<string> {
 }
 
 // 处理头部消息
-export async function handlerUserAvatar(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
-  const filePath = await downloadImage({url: ctx.msg.author.avatarURL({format: 'png'})});
+export async function handlerUserAvatar(msg: Message): Promise<MessageType.Image> {
+  const filePath = await downloadImage({url: msg.author.avatarURL({format: 'png'})});
   const img = await loadImage(filePath);
   const canvas = createCanvas(30, 30)
   const canvasCtx = canvas.getContext('2d');
@@ -121,11 +158,13 @@ export async function handlerUserAvatar(message: string, ctx: { msg: Message, br
   // const imgDataUrl = canvas.toDataURL();
   let stream = fs.createWriteStream(path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
   stream.write(canvas.toBuffer());
-  const cqImage = CQCode.stringify('image', {file: 'file:///' + path.join(imageDiscordAvatarCacheDir, path.basename(filePath))});
+  stream.close();
+  // const cqImage = CQCode.stringify('image', {file: 'file:///' + path.join(imageDiscordAvatarCacheDir, path.basename(filePath))});
   // const cqImage = CQCode.stringify('image', {file: imgDataUrl.replace('data:image/png;base64,', 'base64://')});
   // const cqImage = CQCode.stringify('image', {file: 'https://www.baidu.com/img/flexible/logo/pc/result.png'});
-  return `${cqImage} @${ctx.msg.author.username}#${ctx.msg.author.discriminator}`;
-  // return `[D] ${cqImage} @${ctx.msg.author.username}#${ctx.msg.author.discriminator}\n${message}`;
+  // return `${cqImage} @${ctx.msg.author.username}#${ctx.msg.author.discriminator}`;
+  const relativePath = path.relative('./mcl/data/net.mamoe.mirai-api-http/images', path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
+  return MiraiMessage.Image(null, null, relativePath)
 }
 
 // 处理回复消息
@@ -139,7 +178,7 @@ export async function handlerReply(message: string, ctx: { msg: Message, bridge:
       return `${replyCQCODE}${message}`
     } else {
       // 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
-      const channel: any = await KoishiAndDiscordService.discord.channels.fetch(ctx.msg.channel.id);
+      const channel: any = await ElAndDiscordService.discord.channels.fetch(ctx.msg.channel.id);
       const replyMsg = await channel.messages.fetch(ctx.msg.reference.messageID);
       return `回复消息：${replyMsg.content}\n${message}`
     }
@@ -205,36 +244,36 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
     return message;
   }
   // @ts-ignore
-  const fetchedMembers: GroupMemberInfo[] = await koishi.bots[0].getGroupMemberList(ctx.bridge.qqGroup);
-  fetchedMembers.forEach((member) => {
-    // 匹配用户名
-    const ats = atList.filter(at => {
-      if (at.qq && parseInt(at.qq) === member.userId) {
-        return true;
-      } else if (at.qq) {
-        return false;
+  const fetchedMembers: any[] = await ElAndDiscordService.qqBot.mirai.api.memberList(ctx.bridge.qqGroup);
+  fetchedMembers.forEach((member: {id: number, memberName: string}) => {
+      // 匹配用户名
+      const ats = atList.filter(at => {
+          if (at.qq && parseInt(at.qq) === member.id) {
+              return true;
+          } else if (at.qq) {
+              return false;
+          }
+          return at.username === member.memberName;
+      });
+      if (ats.length === 0) {
+          return;
       }
-      return at.username === member.card || at.username === member.nickname;
-    });
-    if (ats.length === 0) {
-      return;
-    }
-    // 替换
-    ats.forEach((at) => {
-      message = message.replace(at.origin, CQCode.stringify('at', {qq: member.userId}))
-    })
+      // 替换
+      ats.forEach((at) => {
+          message = message.replace(at.origin, CQCode.stringify('at', {qq: member.id}))
+      })
   });
   return message;
 }
 
 // 保存关联消息
-async function handlerSaveMessage(qqMessage: MessageInfo, discordMessage: Message): Promise<MessageEntity> {
+async function handlerSaveMessage(qqMessage: MessageType.GroupMessage, discordMessage: Message): Promise<MessageEntity> {
   const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
   const messageEntity = new MessageEntity();
-  messageEntity.from = "discord";
-  messageEntity.qqMessageID = qqMessage.messageId.toString();
+  messageEntity.from = "qq";
+  messageEntity.qqMessageID = qqMessage.messageChain[0].id.toString();
   messageEntity.qqMessage = {
-    content: qqMessage.message
+    content: JSON.stringify(qqMessage.messageChain),
   }
   messageEntity.discordMessageID = discordMessage.id;
   messageEntity.discordMessage = {
@@ -242,29 +281,4 @@ async function handlerSaveMessage(qqMessage: MessageInfo, discordMessage: Messag
     attachments: discordMessage.attachments.array() as any,
   }
   return messageRepo.save(messageEntity);
-}
-
-// 缩短链接
-async function handlerLongUrlToShortUrl(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
-  const urls = MatchUrlFromText(message);
-  if (!urls) {
-    return message;
-  }
-  try {
-    let newMessage = message;
-    let footerCode = [];
-    for (const url of urls){
-      // discord的gif图
-      if(/https:\/\/tenor\.com\/view\/([\w]+-)+[0-9]+/.test(url)){
-        continue;
-      }
-      const result = await longUrlIntoShotUrl(url)
-      footerCode.push(`\n[→ ${url}]`)
-      newMessage = newMessage.replace(url, `<${result.shortLink}>`)
-    }
-    return newMessage + '\n' + footerCode.join('');
-  } catch (e) {
-    return message + '[error: 长链接转换出错]';
-  }
-
 }

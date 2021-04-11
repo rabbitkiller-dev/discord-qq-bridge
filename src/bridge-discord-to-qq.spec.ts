@@ -1,6 +1,6 @@
 import {handlerAt, parseEmoji} from './bridge-discord-to-qq';
 
-const fakeMessage: any = {msg: {mentions: {users: [{id: '23332333323333', username: '张三'}]}}};
+const fakeMessage: any = {msg: {mentions: {users: [{id: '23332333323333', username: '张三', discriminator: '0000'}]}}};
 
 describe('bridge-discord-to-qq.spec.ts', () => {
   it('parseEmoji', async () => {
@@ -9,6 +9,6 @@ describe('bridge-discord-to-qq.spec.ts', () => {
     expect(await parseEmoji(`没有消息的时候`)).toBe('没有消息的时候')
   });
   it('handlerAt', async () => {
-    expect(await handlerAt(`<@!23332333323333>`, fakeMessage)).toBe(`[@张三]`)
+    expect(await handlerAt(`<@!23332333323333>`, fakeMessage)).toBe(`@张三#0000`)
   });
 });
