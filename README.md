@@ -1,17 +1,15 @@
 # discord-qq-bridge
 
 ## 前置说明
-> 关于QQ机器人
+### 关于QQ机器人
+想要使用QQ机器人，首先需要安装go-cqhttp。
+- [go-cqhttp](https://github.com/Mrs4s/go-cqhttp)：是一个用来连接QQ并且会将消息通过http或websocket的方式上报给koishi程序。以达到让程序接收消息和发送消息
+- [Koishi](https://www.npmjs.com/package/koishi)：是一个接入类似go-cqhttp平台的一个机器人nodejs库，用来方便我们使用nodejs制作qq机器人
 
-想要使用QQ机器人，首先需要安装go-cqhttp。<br>
-[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)：是一个用来连接QQ并且会将消息通过http或websocket的方式上报给koishi程序。以达到让程序接收消息和发送消息<br>
-[Koishi](https://www.npmjs.com/package/koishi)：是一个接入类似go-cqhttp平台的一个机器人nodejs库，用来方便我们使用nodejs制作qq机器人
+### 关于Discord机器人
+Discord制作机器人不需要类似go-cqhttp的中转程序。官方已经提供了相关api和开发者平台，让开发人员方便的制作机器人
 
-> 关于Discord机器人
-
-Discord制作机器人不需要类似go-cqhttp的中转程序。官方已经提供了相关api和开发者平台，让开发人员方便的制作机器人<br>
 使用[discord.js](https://www.npmjs.com/package/discord.js)库就可以方便的使用
-
 
 ## 本库安装使用方式
 ### 一、下载安装go-cqhttp
@@ -59,21 +57,19 @@ npm install
 npm start
 ```
 
-### 支持功能
-
-> QQ -> Discord
+## 支持功能
+### QQ -> Discord
 - [x] 回复消息同步至Discord
 - [x] 支持表情、图片和gif消息同步至Discord
 - [x] 支持回复消息同步至Discord
-> Discord -> QQ
+
+### Discord -> QQ
 - [x] 回复消息同步至Discord
 - [ ] 支持图片和gif消息同步至Discord (gif暂不支持)
 - [x] 支持回复消息同步至Discord
 
-### 文档相关
+## 文档相关
 官方api文档
-https://discordjs.guide/#before-you-begin
-https://discord.com/developers/applications/781193252094476360/bot
-https://link.zhihu.com/?target=https%3A//amazonaws-china.com/cn/
-
-
+- https://discordjs.guide/#before-you-begin
+- https://discord.com/developers/applications/781193252094476360/bot
+- https://link.zhihu.com/?target=https%3A//amazonaws-china.com/cn/
