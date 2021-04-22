@@ -165,7 +165,7 @@ export async function handlerAt(message: string, ctx: { msg: Message, bridge: Br
 
 // 处理at discord用户
 export async function handlerAtQQUser(message: string, ctx: { msg: Message, bridge: BridgeConfig }): Promise<string> {
-  const atList: Array<{ username: string, qq?: string, origin: string }> = [];
+  const atList: Array<{ username: string, qq: string, origin: string }> = [];
   // 正则匹配
   const m1 = message.match(/\@([^\n]+) (?:\()([0-9]+)\)(\#0000)?/g);
   if (m1) {
@@ -188,49 +188,12 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
       })
     })
   }
-  [
-    /\[@([\w-_\s]+)\]/, // [@rabbitkiller]
-    /`@([\w-_\s]+)`/, // `@rabbitkiller`
-  ].forEach((reg) => {
-    const gReg = new RegExp(reg.source, 'g');
-    const sReg = new RegExp(reg.source);
-    // 全局匹配满足条件的
-    const strList = message.match(gReg);
-    if (!strList) {
-      return;
-    }
-    strList.forEach((str) => {
-      // 获取用户名, 保留origin匹配上的字段用来replace
-      if (str.match(sReg)[1]) {
-        atList.push(
-          {origin: str, username: str.match(sReg)[1].trim()}
-        )
-      }
-    })
-  });
   if (atList.length === 0) {
     return message;
   }
-  // @ts-ignore
-  const fetchedMembers: GroupMemberInfo[] = await koishi.bots[0].getGroupMemberList(ctx.bridge.qqGroup);
-  fetchedMembers.forEach((member) => {
-    // 匹配用户名
-    const ats = atList.filter(at => {
-      if (at.qq && parseInt(at.qq) === member.userId) {
-        return true;
-      } else if (at.qq) {
-        return false;
-      }
-      return at.username === member.card || at.username === member.nickname;
-    });
-    if (ats.length === 0) {
-      return;
-    }
-    // 替换
-    ats.forEach((at) => {
-      message = message.replace(at.origin, CQCode.stringify('at', {qq: member.userId}))
-    })
-  });
+  atList.forEach((at)=>{
+    message = message.replace(at.origin, CQCode.stringify('at', {qq: at.qq}))
+  })
   return message;
 }
 
