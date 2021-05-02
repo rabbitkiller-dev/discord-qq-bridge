@@ -54,7 +54,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
         for (const cqMsg of cqMessages) {
             // 文字直接发送
             if (typeof cqMsg === 'string') {
-                messageContent += resolveBrackets(cqMsg);
+                messageContent += resolveEncoding(cqMsg);
             } else {
                 // 判断类型在发送对应格式
                 switch (cqMsg.type) {
@@ -95,7 +95,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
 }
 
 
-function resolveBrackets(msg) {
+function resolveEncoding(msg) {
     msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']').replace(new RegExp('&amp;', 'g'), '&')
     return msg
 }
@@ -119,7 +119,7 @@ async function handlerForward(message: string): Promise<string> {
             const forwardDate = `${forwardTime.getHours()}:${forwardTime.getMinutes()}:${forwardTime.getSeconds()}`;
 
             forwardMsg = result.data.message;
-            forwardMsg = resolveBrackets(forwardMsg);
+            forwardMsg = resolveEncoding(forwardMsg);
             // 回复的消息是否来自discord
             const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
             const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
@@ -170,7 +170,7 @@ async function handlerReply(message: string): Promise<string> {
             const replyDate = `${replyTime.getHours()}:${replyTime.getMinutes()}:${replyTime.getSeconds()}`;
 
             replyMsg = result.data.message;
-            replyMsg = resolveBrackets(replyMsg);
+            replyMsg = resolveEncoding(replyMsg);
             // 回复的消息是否来自discord
             const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
             const refMsg = await messageRepo.findOne({qqMessageID: cqMsg.data.id});
