@@ -96,7 +96,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
 
 
 function resolveBrackets(msg) {
-    msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']')
+    msg = msg.replace(new RegExp('&#91;', 'g'), '[').replace(new RegExp('&#93;', 'g'), ']').replace(new RegExp('&amp;', 'g'), '&')
     return msg
 }
 
