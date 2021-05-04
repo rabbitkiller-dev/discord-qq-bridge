@@ -92,11 +92,6 @@ export async function toQQ(msg: Message) {
   }
 }
 
-function resolveEncoding(msg) {
-    msg = msg.replace(new RegExp('&', 'g'), '&amp;')
-    return msg
-}
-
 // 把表情解析成cq:image
 export async function parseEmoji(message: string): Promise<string> {
   let content = message;
