@@ -65,7 +65,7 @@ npm start
 
 ### Discord -> QQ
 - [x] 回复消息同步至Discord
-- [ ] 支持图片和gif消息同步至Discord (gif暂不支持)
+- [x] 支持图片和gif消息同步至Discord (gif暂不支持)
 - [x] 支持回复消息同步至Discord
 
 ## 文档相关
