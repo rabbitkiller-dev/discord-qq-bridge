@@ -1,16 +1,16 @@
-import {Message as DiscordMessage, Message} from "discord.js";
-import {Message as MiraiMessage, MessageType} from 'mirai-ts';
-import {CQCode} from 'koishi';
+import { Message as DiscordMessage, Message } from "discord.js";
+import { Message as MiraiMessage, MessageType } from 'mirai-ts';
+import { CQCode } from 'koishi';
 import config from "./config";
 import * as path from "path";
 import * as fs from "fs";
 import * as log from "./utils/log5";
-import {BridgeConfig} from "./interface";
-import {DatabaseService} from "./database.service";
-import {MessageEntity} from "./entity/message.entity";
-import {createCanvas, loadImage} from "canvas";
-import {downloadDiscordAttachment, downloadImage, imageDiscordAvatarCacheDir} from "./utils/download-file";
-import {BotService} from "./el-bot/bot.service";
+import { BridgeConfig } from "./interface";
+import { DatabaseService } from "./database.service";
+import { MessageEntity } from "./entity/message.entity";
+import { createCanvas, loadImage } from "canvas";
+import { downloadDiscordAttachment, downloadImage, imageDiscordAvatarCacheDir } from "./utils/download-file";
+import { BotService } from "./el-bot/bot.service";
 
 export default async function () {
   BotService.discord.on('message', async (msg) => {
@@ -53,7 +53,10 @@ export async function toQQ(msg: Message) {
     }
 
     // 添加用户名称在信息前面
-    msgChain.push(await handlerUserAvatar(msg));
+    const avatar = await handlerUserAvatar(msg)
+    if (avatar) {
+      msgChain.push(avatar);
+    }
     msgChain.push(MiraiMessage.Plain(`@${msg.author.username}#${msg.author.discriminator}\n`));
 
     // 没有内容时不处理
@@ -66,7 +69,7 @@ export async function toQQ(msg: Message) {
       messageContent = await handlerAtQQUser(messageContent, {msg: msg, bridge: bridge});
 
       const cqMsg = CQCode.parseAll(messageContent);
-      for(let source of cqMsg){
+      for (let source of cqMsg) {
         if (typeof source === "string") {
           msgChain.push(MiraiMessage.Plain(source))
         } else {
@@ -99,7 +102,7 @@ export async function toQQ(msg: Message) {
     log.message('⇿', 'Discord消息已推送到QQ', msg.author.username + '#' + msg.author.discriminator, msg.content)
   } catch (error) {
     log.error(error);
-    const res = await BotService.qqBot.mirai.api.sendGroupMessage(`程序出错消息格式化失败 来自discordMsgId=${msg.id} \n${msg.content}`, bridge.qqGroup);
+    const res = await BotService.qqBot.mirai.api.sendGroupMessage(`程序出错消息格式化失败 来自${msg.author.username} \n${msg.content}`, bridge.qqGroup);
     const resMessage = await BotService.qqBot.mirai.api.messageFromId(res.messageId);
     handlerSaveMessage(resMessage as MessageType.GroupMessage, msg).then();
   }
@@ -144,7 +147,10 @@ export async function parseEmoji(message: string): Promise<string> {
 }
 
 // 处理头部消息
-export async function handlerUserAvatar(msg: Message): Promise<MessageType.Image> {
+export async function handlerUserAvatar(msg: Message): Promise<MessageType.Image | undefined> {
+  if (!msg.author.avatar) {
+    return undefined;
+  }
   const filePath = await downloadImage({url: msg.author.avatarURL({format: 'png'})});
   const img = await loadImage(filePath);
   const canvas = createCanvas(30, 30)
@@ -156,10 +162,6 @@ export async function handlerUserAvatar(msg: Message): Promise<MessageType.Image
   let stream = fs.createWriteStream(path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
   stream.write(canvas.toBuffer());
   stream.close();
-  // const cqImage = CQCode.stringify('image', {file: 'file:///' + path.join(imageDiscordAvatarCacheDir, path.basename(filePath))});
-  // const cqImage = CQCode.stringify('image', {file: imgDataUrl.replace('data:image/png;base64,', 'base64://')});
-  // const cqImage = CQCode.stringify('image', {file: 'https://www.baidu.com/img/flexible/logo/pc/result.png'});
-  // return `${cqImage} @${ctx.msg.author.username}#${ctx.msg.author.discriminator}`;
   let relativePath = path.relative(path.join(__dirname, '../mcl/data/net.mamoe.mirai-api-http/images'), path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
   return MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/'))
 }
@@ -220,7 +222,7 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
   if (atList.length === 0) {
     return message;
   }
-  atList.forEach((at)=>{
+  atList.forEach((at) => {
     message = message.replace(at.origin, CQCode.stringify('at', {qq: at.qq}))
   })
   return message;
