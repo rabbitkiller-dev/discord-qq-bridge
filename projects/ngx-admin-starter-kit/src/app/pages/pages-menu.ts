@@ -8,6 +8,12 @@ export const MENU_ITEMS: NbMenuItem[] = [
     home: true,
   },
   {
+    title: 'QQ群自动同意审批',
+    icon: 'home-outline',
+    link: '/pages/config',
+    home: true,
+  },
+  {
     title: '桥同步设置',
     icon: 'home-outline',
     link: '/pages/admin',

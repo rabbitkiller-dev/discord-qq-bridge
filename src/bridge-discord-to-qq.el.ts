@@ -1,7 +1,7 @@
 import {Message as DiscordMessage, Message} from "discord.js";
 import {Message as MiraiMessage, MessageType} from 'mirai-ts';
 import {CQCode} from 'koishi';
-import config from "./el.config";
+import config from "./config";
 import * as path from "path";
 import * as fs from "fs";
 import * as log from "./utils/log5";

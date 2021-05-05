@@ -1,4 +1,4 @@
-import config from "./el.config";
+import config from "./config";
 import { Config as MiraiConfig, MessageType } from "mirai-ts";
 import {Guild, Message, Message as DiscordMessage, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {BotService} from "./el-bot/bot.service";
