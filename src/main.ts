@@ -3,21 +3,23 @@ import 'koishi-adapter-cqhttp';
 import * as log from './utils/log5';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import bridgeQQToDiscord from './bridge-qq-to-discord';
-import bridgeDiscordToQQ from './bridge-discord-to-qq';
 import {DatabaseService} from "./database.service";
-import {KoishiAndDiscordService} from "./koishiAndDiscord.service";
+import { BotService } from './el-bot/bot.service';
+import { autoApproveQQGroup } from './el-bot/auto-approve-qq-group-add';
+import bridgeQQToDiscord from './bridge-qq-to-discord.el';
+import bridgeDiscordToQQ from './bridge-discord-to-qq.el';
 
 
 async function main() {
   await DatabaseService.init();
   log.message('🌈', `数据库连接成功`);
-  await KoishiAndDiscordService.initQQBot();
+  await BotService.initQQBot();
   log.message('🌈', `QQ 成功连接`);
-  await KoishiAndDiscordService.initDiscord();
-  log.message('🌈', `Discord 成功登录 ${KoishiAndDiscordService.discord.user.tag}`);
+  await BotService.initDiscord();
+  log.message('🌈', `Discord 成功登录 ${BotService.discord.user.tag}`);
   await bridgeQQToDiscord();
   await bridgeDiscordToQQ();
+  await autoApproveQQGroup();
 }
 
 main().then()
