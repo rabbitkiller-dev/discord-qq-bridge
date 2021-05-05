@@ -28,25 +28,3 @@ const json = JSON.parse(fs.readFileSync(path.join(__dirname, '../config.json')).
 Object.assign(config, json);
 
 export default config;
-// {
-//   qqBot: 3245538509,
-//   setting: {
-//     host: "localhost",
-//     port: 8080,
-//     authKey: 'INITKEYKPRGCLwL',
-//     enableWebsocket: false,
-//   },
-//   discordBot: '781193252094476360',
-//   discordBotToken: 'NzgxMTkzMjUyMDk0NDc2MzYw.X76E6Q.lCYGqH-6D44p7RODsBRMvzcLlP8',
-//   bridges: [
-//     {
-//       discord: {
-//         id: '782282707253854328',
-//         token: '89A7nQnBOUrqz9o3b4orizWJNn_CP-F4T3z9ragsAx5k_7oiSPZz2QW0fB2EA9Z9BGsE',
-//         channelID: '781347109676384297',
-//       },
-//       qqGroup: 518986671
-//     }
-//   ],
-//   proxy: '',
-// } as Config;
