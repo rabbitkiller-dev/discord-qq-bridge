@@ -217,49 +217,12 @@ export async function handlerAtQQUser(message: string, ctx: { msg: Message, brid
       })
     })
   }
-  [
-    /\[@([\w-_\s]+)\]/, // [@rabbitkiller]
-    /`@([\w-_\s]+)`/, // `@rabbitkiller`
-  ].forEach((reg) => {
-    const gReg = new RegExp(reg.source, 'g');
-    const sReg = new RegExp(reg.source);
-    // 全局匹配满足条件的
-    const strList = message.match(gReg);
-    if (!strList) {
-      return;
-    }
-    strList.forEach((str) => {
-      // 获取用户名, 保留origin匹配上的字段用来replace
-      if (str.match(sReg)[1]) {
-        atList.push(
-          {origin: str, username: str.match(sReg)[1].trim()}
-        )
-      }
-    })
-  });
   if (atList.length === 0) {
     return message;
   }
-  // @ts-ignore
-  const fetchedMembers: any[] = await BotService.qqBot.mirai.api.memberList(ctx.bridge.qqGroup);
-  fetchedMembers.forEach((member: {id: number, memberName: string}) => {
-      // 匹配用户名
-      const ats = atList.filter(at => {
-          if (at.qq && parseInt(at.qq) === member.id) {
-              return true;
-          } else if (at.qq) {
-              return false;
-          }
-          return at.username === member.memberName;
-      });
-      if (ats.length === 0) {
-          return;
-      }
-      // 替换
-      ats.forEach((at) => {
-          message = message.replace(at.origin, CQCode.stringify('at', {qq: member.id}))
-      })
-  });
+  atList.forEach((at)=>{
+    message = message.replace(at.origin, CQCode.stringify('at', {qq: at.qq}))
+  })
   return message;
 }
 

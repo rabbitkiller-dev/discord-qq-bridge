@@ -1,5 +1,5 @@
 import config from "./el.config";
-import {MessageType} from "mirai-ts";
+import { Config as MiraiConfig, MessageType } from "mirai-ts";
 import {Guild, Message, Message as DiscordMessage, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
 import {BotService} from "./el-bot/bot.service";
 import {downloadQQImage} from "./utils/download-file";
@@ -97,8 +97,8 @@ async function toDiscord(qqMsg: MessageType.GroupMessage) {
 
 // 处理回复消息
 async function handlerForward(quoteMsg: MessageType.Quote): Promise<string> {
-  const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, quoteMsg.senderId);
-  let messageContent = `** 回复 @${memberInfo.name} 在 {获取时间失败} 的消息 **\n`;
+  const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, quoteMsg.senderId) as MiraiConfig.MemberInfo;
+  let messageContent = `** 回复 @${memberInfo.name} 在 {暂无日期} 的消息 **\n`;
   for (const msg of quoteMsg.origin) {
     switch (msg.type) {
       case 'Source':
@@ -109,7 +109,7 @@ async function handlerForward(quoteMsg: MessageType.Quote): Promise<string> {
         messageContent += msg.text;
         break;
       case 'At':
-        const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, msg.target);
+        const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, msg.target) as MiraiConfig.MemberInfo;;
         messageContent += `\`@${memberInfo.name}(${msg.target})\``;
         break;
       case 'AtAll':

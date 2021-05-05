@@ -2,26 +2,30 @@
 
 ## 前置说明
 ### 关于QQ机器人
-想要使用QQ机器人，首先需要安装go-cqhttp。
-- [go-cqhttp](https://github.com/Mrs4s/go-cqhttp)：是一个用来连接QQ并且会将消息通过http或websocket的方式上报给koishi程序。以达到让程序接收消息和发送消息
-- [el-bot](https://www.npmjs.com/package/koishi)：是一个接入类似go-cqhttp平台的一个机器人nodejs库，用来方便我们使用nodejs制作qq机器人
+QQ机器人使用了el-bot的js库
+- [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 帮助你搭建mirai所需要的环境
+- [el-bot](https://docs.bot.elpsy.cn)：是一个接入mirai平台的一个机器人nodejs库，用来方便我们使用nodejs制作qq机器人
 
 ### 关于Discord机器人
 Discord制作机器人不需要类似go-cqhttp的中转程序。官方已经提供了相关api和开发者平台，让开发人员方便的制作机器人
 
-使用[discord.js](https://www.npmjs.com/package/discord.js)库就可以方便的使用
+使用[discord.js](https://www.npmjs.com/package/discord.js) 库就可以方便的使用
 
 ## 本库安装使用方式
-### 一、下载安装go-cqhttp
-[详细步骤](https://github.com/Mrs4s/go-cqhttp/blob/master/docs/quick_start.md)
+### 一、启动MCL (mirai一键安装环境工具)
+> 使用Docker的方式
+1. 修改文件 `mcl-1.1.0-beta.1/config/Console/AutoLogin.yml` 添加属于你的qq账号
+2. 直接运行命令 `docker-compose up`
+正常情况，bot收到消息后，控制台会看的到就成功了
 
-1. 将对应操作系统的go-cqhttp下载到go-cqhttp目录
-2. 将go-cqhttp/config.sample.json 复制拷贝成 config.json 并配置
-```shell script
-"uin": 0, <--- qq号
-"password": "", <--- 密码
-```
-3. 启动go-cqhttp
+> 非Docker的方式
+
+1. 安装java jdk 并且11以上的版本，配置好java环境变量， 控制台输入`java --version` 能看到版本信息就正常
+2. 修改文件 `mcl-1.1.0-beta.1/config/Console/AutoLogin.yml` 添加属于你的qq账号
+3. 进入`mcl-1.1.0-beta.1`目录，运行`./mcl`
+正常情况，bot收到消息后，控制台会看的到就成功了
+   
+> 注： 推荐使用docker的方式，不只是本地，部署到云环境也方便
 
 ### 二、配置
 将koishi.sample.ts 复制拷贝成 koishi.config.ts, 并配置下面几项
@@ -54,7 +58,7 @@ discordBotToken: '',
 ### 三、运行
 ```shell script
 npm install
-npm start
+npm run start:dev
 ```
 
 ## 支持功能
@@ -65,7 +69,7 @@ npm start
 
 ### Discord -> QQ
 - [x] 回复消息同步至Discord
-- [ ] 支持图片和gif消息同步至Discord (gif暂不支持)
+- [x] 支持图片和gif消息同步至Discord
 - [x] 支持回复消息同步至Discord
 
 ## 文档相关
