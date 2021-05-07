@@ -28,11 +28,11 @@ Discord制作机器人不需要类似go-cqhttp的中转程序。官方已经提�
 > 注： 推荐使用docker的方式，不只是本地，部署到云环境也方便
 
 ### 二、配置
-将koishi.sample.ts 复制拷贝成 koishi.config.ts, 并配置下面几项
+将config.sample.json 复制拷贝成 config.json, 并配置下面几项
 ```shell script
-qqBot: 0,
-discordBot: '',
-discordBotToken: '',
+qqBot: 0, // 用来当bot的qq号码
+discordBot: '', // discord申请的bot id
+discordBotToken: '', // discord申请的bot id对应的token
     bridges: [
         {
             bridge: {
@@ -59,6 +59,22 @@ discordBotToken: '',
 ```shell script
 npm install
 npm run start:dev
+```
+
+### 三、生产发布
+推荐使用pm2管理
+```shell script
+npm install
+npm run build
+
+## 启动
+pm2 start dist/main.js --name bridge
+## 停止
+pm2 stop bridge
+## 重启
+pm2 restart bridge
+## 查看
+pm2 ls
 ```
 
 ## 支持功能
