@@ -89,7 +89,7 @@ async function toDiscord(qqMessage: RawSession<'message'>) {
             // avatarURL: `http://q.qlogo.cn/headimg_dl?bs=qq&dst_uin=${qqMessage.sender.userId}&src_uin=www.feifeiboke.com&fid=blog&spec=640&t=${Math.random()}` // 高清地址
             files: [],
         }
-        const resMessage = await webhook.send(`发生错误导致消息同步失败:QQMsgID=${qqMessage.messageId} \n${qqMessage.message}`, option) as Message;
+        const resMessage = await webhook.send(`程序出错消息格式化失败:QQMsgID=${qqMessage.messageId} \n${qqMessage.message}`, option) as Message;
         handlerSaveMessage(qqMessage, resMessage).then();
     }
 }

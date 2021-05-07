@@ -3,6 +3,31 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
+
+export interface BridgeConfig {
+  discord: {
+    id: string,
+    token: string,
+    channelID: string,
+  },
+  qqGroup: number
+}
+export interface Config {
+  qqBot: number,
+  setting: {
+    host: string,
+    port: number,
+    authKey: string,
+    enableWebsocket: boolean,
+  },
+  discordBot: string;
+  discordBotToken: string;
+  bridges: BridgeConfig[];
+  autoApproveQQGroup: Array<{qqGroup: number, reg: string}>
+  proxy: string;
+}
+
+
 export interface Channel {
   id: string;
   name: string;
@@ -40,6 +65,18 @@ export class AdminService {
   constructor(public http: HttpClient) {
   }
 
+  getConfig(): Observable<Config> {
+    return this.http.get<{ data: Config }>('/api/bridge/config').pipe(map((result) => {
+      return result.data
+    }));
+  }
+
+  setConfig(config: Config): Observable<Config> {
+    return this.http.post<{ data: Config }>('/api/bridge/config', config).pipe(map((result) => {
+      return result.data
+    }));
+  }
+
   getGuilds(): Observable<Guild[]> {
     if (this.guilds.length) {
       return of(this.guilds)
@@ -56,7 +93,6 @@ export class AdminService {
       return this.channels
     }));
   }
-
 
 
   getGuildAllUsers(guild: string): Observable<User[]> {
