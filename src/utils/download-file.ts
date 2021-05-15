@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as request from 'request';
-import config from "../koishi.config";
+import config from "../config";
 import got from "got";
 import * as FileType from "file-type";
 import * as md5 from "md5";
@@ -51,6 +51,8 @@ export async function downloadImage(params: { url: string, isCache?: boolean }):
                     stream.write(chunk);
                 }).on('end', () => {
                     stream.close();
+                });
+                stream.on('close', () => {
                     resolve(localPath)
                 });
             })

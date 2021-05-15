@@ -1,7 +1,4 @@
 import bridgeDiscordToQQ, {handlerAt, parseEmoji} from './bridge-discord-to-qq';
-import {Client, Intents} from "discord.js";
-import {App} from 'koishi-test-utils';
-import config from './koishi.config';
 
 describe('bridge-bridge-to-qq.spec.ts', () => {
   beforeAll(async ()=>{
