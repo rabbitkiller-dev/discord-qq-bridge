@@ -11,7 +11,7 @@ services:
             - ./mcl-1.1.0-beta.1:/bridge/mcl
             - ./cache:/bridge/cache
         working_dir: /bridge/mcl
-        command: ./mcl
+        command: java -jar mcl.jar -u
         image: openjdk:11.0.10-oraclelinux8
 volumes:
     logvolume01: {}
