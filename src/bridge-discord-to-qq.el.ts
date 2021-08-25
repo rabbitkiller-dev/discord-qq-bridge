@@ -1,6 +1,7 @@
 import { Message as DiscordMessage, Message } from "discord.js";
 import { Message as MiraiMessage, MessageType } from 'mirai-ts';
-import { CQCode } from 'koishi';
+import * as KaiheilaBotRoot from 'kaiheila-bot-root';
+import { CQCode } from 'koishi-utils';
 import config from "./config";
 import * as path from "path";
 import * as fs from "fs";
@@ -18,6 +19,12 @@ export default async function () {
       msg.channel.send('Pong.');
     }
     await toQQ(msg);
+    try {
+      await toKaiheila(msg);
+    } catch (error) {
+      log.error('[Discord]->[Kaiheila] 失败!(不应该出现的错误)');
+      log.error(error);
+    }
   });
 }
 
@@ -243,4 +250,57 @@ async function handlerSaveMessage(qqMessage: MessageType.GroupMessage, discordMe
     attachments: discordMessage.attachments.array() as any,
   }
   return messageRepo.save(messageEntity);
+}
+
+
+/**
+ * 发送到Kaiheila
+ */
+async function toKaiheila(msg: Message) {
+  // 无视自己的消息
+  if (msg.author.id === config.discordBot || (config.bridges.find(opt => opt.discord.id === msg.author.id))) {
+    return;
+  }
+  // 查询这个频道是否需要通知到群
+  const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
+  if (!bridge || !bridge.kaiheila) {
+    return;
+  }
+  const msgText = JSON.stringify([
+    {
+      "type": "card",
+      "theme": "secondary",
+      "size": "lg",
+      "modules": [
+        {
+          "type": "section",
+          "text": {
+            "type": "plain-text",
+            "content": `@${msg.author.username}#${msg.author.discriminator} From [Discord]`
+          },
+          "mode": "left",
+          "accessory": {
+            "type": "image",
+            "src": 'https://img.kaiheila.cn/assets/2021-01/7kr4FkWpLV0ku0ku.jpeg',
+            // "src": msg.author.avatarURL({format: 'png'}),
+            "size": "sm",
+            "circle": true
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "kmarkdown",
+            "content": msg.content
+          }
+        }
+      ]
+    }
+  ]);
+  const resultMessage = await BotService.kaiheila.post('https://www.kaiheila.cn/api/v3/message/create', {
+    type: KaiheilaBotRoot.MessageType.card,
+    target_id: bridge.kaiheila.channelID,
+    content: msgText
+  });
+  console.log(resultMessage);
 }

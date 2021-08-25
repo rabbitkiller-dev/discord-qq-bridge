@@ -1,10 +1,17 @@
 import config from "./config";
 import { Config as MiraiConfig, MessageType } from "mirai-ts";
-import {Guild, Message, Message as DiscordMessage, MessageAttachment, Webhook, WebhookMessageOptions} from "discord.js";
-import {BotService} from "./el-bot/bot.service";
-import {downloadQQImage} from "./utils/download-file";
-import {MessageEntity} from "./entity/message.entity";
-import {DatabaseService} from "./database.service";
+import {
+  Guild,
+  Message,
+  Message as DiscordMessage,
+  MessageAttachment,
+  Webhook,
+  WebhookMessageOptions
+} from "discord.js";
+import { BotService } from "./el-bot/bot.service";
+import { downloadQQImage } from "./utils/download-file";
+import { MessageEntity } from "./entity/message.entity";
+import { DatabaseService } from "./database.service";
 import * as log from './utils/log5';
 import * as xmlUtil from 'fast-xml-parser';
 
@@ -45,7 +52,7 @@ async function toDiscord(qqMsg: MessageType.GroupMessage) {
         case 'At':
           const memberInfos = await BotService.qqBot.mirai.api.memberList(qqMsg.sender.group.id);
           const memberInfo = memberInfos.find(member => member.id === msg.target);
-          if(memberInfo){
+          if (memberInfo) {
             messageContent += `\`@${memberInfo.memberName}(${msg.target})\``;
           }
           break;
@@ -109,7 +116,8 @@ async function handlerForward(quoteMsg: MessageType.Quote): Promise<string> {
         messageContent += msg.text;
         break;
       case 'At':
-        const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, msg.target) as MiraiConfig.MemberInfo;;
+        const memberInfo = await BotService.qqBot.mirai.api.memberInfo(quoteMsg.groupId, msg.target) as MiraiConfig.MemberInfo;
+        ;
         messageContent += `\`@${memberInfo.name}(${msg.target})\``;
         break;
       case 'AtAll':
@@ -129,6 +137,7 @@ async function handlerForward(quoteMsg: MessageType.Quote): Promise<string> {
   messageContent = messageContent.split('\n').map((str) => '> ' + str).join('\n') + '\n'
   return messageContent;
 }
+
 // 处理Xml消息
 async function handlerXml(msg: MessageType.Xml): Promise<string> {
   let messageContent = '';
@@ -137,13 +146,13 @@ async function handlerXml(msg: MessageType.Xml): Promise<string> {
     attrNodeName: 'attribute',
     ignoreAttributes: false,
   });
-  if(xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '1') {
+  if (xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '1') {
     messageContent += `> ** 转发消息 **\n`
     messageContent += `> ${xmlData.msg.item.summary}\n`
     messageContent += `> ${xmlData.msg.attribute.url}\n`
-  } else if(xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '35') {
+  } else if (xmlData.msg && xmlData.msg.attribute && xmlData.msg.attribute.serviceID === '35') {
     messageContent += `> ** 转发消息 **\n`
-    xmlData.msg.title.forEach((title)=>{
+    xmlData.msg.title.forEach((title) => {
       messageContent += `> ${title['#text']}\n`;
     })
   } else {
@@ -152,7 +161,6 @@ async function handlerXml(msg: MessageType.Xml): Promise<string> {
 
   return messageContent;
 }
-
 
 
 // 处理@ discord用户
