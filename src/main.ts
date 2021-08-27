@@ -5,8 +5,8 @@ import { AppModule } from './app.module';
 import { DatabaseService } from "./database.service";
 import { BotService } from './el-bot/bot.service';
 import { autoApproveQQGroup } from './el-bot/auto-approve-qq-group-add';
-import bridgeQQToDiscord from './bridge-qq-to-discord.el';
-import bridgeDiscordToQQ from './bridge-discord-to-qq.el';
+import bridgeQq from './el-bot/bridge-qq';
+import bridgeDiscord from './el-bot/bridge-discord';
 import bridgeKai from './el-bot/bridge-kaiheila';
 
 
@@ -21,8 +21,8 @@ async function main() {
   log.message('🌈', `开黑啦 成功登录`);
   // log.message('🌈', `开黑啦 成功登录 ${(await BotService.kaiheila.users.me()).username}`);
   // 桥
-  await bridgeQQToDiscord();
-  await bridgeDiscordToQQ();
+  await bridgeQq();
+  await bridgeDiscord();
   await bridgeKai();
   // qq群自动审批
   await autoApproveQQGroup();

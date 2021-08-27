@@ -5,38 +5,33 @@ import * as KaiheilaBotRoot from 'kaiheila-bot-root';
 import { BridgeConfig } from '../interface';
 import config from '../config';
 import { Message as DiscordMessage, WebhookMessageOptions } from 'discord.js';
+import { Message as MiraiMessage, MessageType } from 'mirai-ts';
+import { KaiheilaAllMessage } from './interface';
+import {
+  BridgeMessage, bridgeSendDiscord,
+  bridgeSendQQ,
+  kaiheilaMessageToBridgeMessage
+} from './message-util';
 
-export interface AllMessage { type: string, data: { type: KaiheilaBotRoot.MessageType, channelId: string } }
 
 export default async function bridgeKai() {
-  BotService.kaiheila.on('allMessages', async (allMessage: AllMessage) => {
-    try {
-      await toDiscord(allMessage);
-    } catch (error) {
-      log.error('[Kaiheila]->[Discord] 失败!(不应该出现的错误)');
-      log.error(error);
+  BotService.kaiheila.on('allMessages', async (allMessage: KaiheilaAllMessage) => {
+    if(allMessage.data.authorId === '140691480'){
+      return;
     }
-    try {
-      // await toQQ(allMessage);
-    } catch (error) {
-      log.error('[Kaiheila]->[QQ] 失败!(不应该出现的错误)');
-      log.error(error);
+    // 查询这个频道是否需要通知到群
+    const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === allMessage.data.channelId);
+    if (!bridge) {
+      return;
     }
+    const bridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);
+    bridgeMessage.bridge = bridge;
+    await bridgeSendDiscord(bridgeMessage);
+    await bridgeSendQQ(bridgeMessage);
   });
-  BotService.kaiheila.on('textMessage', async (kaiMsg: KaiheilaBotRoot.TextMessage) => {
-    // const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === kaiMsg.channelId);
-    // if (!bridge) {
-    //   return;
-    // }
-    // let quote = undefined;
-    // const msgChain: miraiTs.MessageType.MessageChain = [];
-    // msgChain.push(miraiTs.Message.Plain(kaiMsg.content));
-    // const res = await BotService.qqBot.mirai.api.sendGroupMessage(msgChain, bridge.qqGroup, quote);
-  });
-
 }
 
-async function toDiscord(allMessage: AllMessage) {
+async function toDiscord(allMessage: KaiheilaAllMessage) {
   const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === allMessage.data.channelId);
   if (!bridge || !bridge.discord) {
     return;
@@ -67,11 +62,13 @@ async function toDiscord(allMessage: AllMessage) {
 /**
  * 转发到QQ
  */
-// async function toQQ(kaiMsg: Kaiheila.Message) {
-// 查询这个频道是否需要通知到群
-// const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === kaiMsg);
-// if (!bridge) {
-//   return;
-// }
-// }
+async function toQQ(allMessage: KaiheilaAllMessage) {
+  const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === allMessage.data.channelId);
+  if (!bridge || !bridge.qqGroup) {
+    return;
+  }
+  const bridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);
+  bridgeMessage.chain.unshift(MiraiMessage.Plain(`@[KHL] ${bridgeMessage.author.username}#${bridgeMessage.author.discriminator}\n`));
+  const res = await BotService.qqBot.mirai.api.sendGroupMessage(bridgeMessage.chain, bridge.qqGroup, parseInt(bridgeMessage.quote));
+}
 

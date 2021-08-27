@@ -42,7 +42,6 @@ export async function toQQ(msg: Message) {
   try {
     let quote = undefined;
     const msgChain: MessageType.MessageChain = [];
-    const temps: any[] = [];
 
     // 处理回复
     if (msg.reference && msg.reference.messageID) {

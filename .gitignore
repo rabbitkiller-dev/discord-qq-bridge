@@ -35,7 +35,10 @@ lerna-debug.log*
 
 go-cqhttp
 
+cache
 config.json
+config.dev.json
+config.prod.json
 src/koishi.config.ts
 src/koishi.config.prod.ts
 src/el.config.ts
