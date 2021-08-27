@@ -7,6 +7,7 @@ import * as FileType from "file-type";
 import * as md5 from "md5";
 
 export const cacheDir = path.join(__dirname, '../../cache');
+export const assetsCacheDir = path.join(cacheDir, 'assets');
 export const imageCacheDir = path.join(cacheDir, 'images');
 export const imageDiscordAvatarCacheDir = path.join(cacheDir, 'images/bridge-avatar');
 export const imageDiscordAttachmentCacheDir = path.join(cacheDir, 'images/bridge-attachment');
@@ -28,6 +29,24 @@ async function initCache() {
     if (!fs.existsSync(imageDiscordAttachmentCacheDir)) {
         fs.mkdirSync(imageDiscordAttachmentCacheDir);
     }
+    if (!fs.existsSync(assetsCacheDir)) {
+        fs.mkdirSync(assetsCacheDir);
+    }
+}
+
+export async function download(url: string, useCache: boolean): Promise<string> {
+    await initCache();
+    const fileMD5Name = md5(url);
+    const isExists = fs.readdirSync(assetsCacheDir).find((file) => file.startsWith(`${fileMD5Name}.`));
+    if (isExists && useCache) {
+        return path.join(assetsCacheDir, isExists);
+    }
+    const buffer = await got(url).buffer();
+    const fileType = await FileType.fromBuffer(buffer);
+    const filename = `${md5(url)}.${fileType.ext}`;
+    const localPath = path.join(assetsCacheDir, filename);
+    fs.writeFileSync(localPath, buffer);
+    return localPath;
 }
 
 // 下载文件并缓存

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { BridgeConfig } from './interface';
 
 export interface Config {
+  myDomainName: string,
   qqBot: number,
   setting: {
     host: string,
