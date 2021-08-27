@@ -9,6 +9,9 @@ import { MessageUtil } from './message';
 import { BridgeConfig } from '../interface';
 import { htmlOutput, parser } from 'discord-markdown';
 import * as log from "../utils/log5";
+import { generateQQMsgContentAvatar } from './utils';
+import got from 'got';
+import config from '../config';
 
 export class BridgeMessage {
   source: 'QQ' | 'KHL' | 'DC';
@@ -34,18 +37,12 @@ export class BridgeMessage {
 export async function kaiheilaMessageToBridgeMessage(allMessage: KaiheilaAllMessage): Promise<BridgeMessage> {
   const bridgeMessage = new BridgeMessage();
   bridgeMessage.source = 'KHL';
-  // 头像
-  // 添加用户名称在信息前面
-  let avatar: MessageType.Image;
 
   if (allMessage.data.type === KaiheilaBotRoot.MessageType.text) {
     const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any;
-    // avatar = await generateQQMsgContentAvatar(kaiMsg.author.avatar);
-    // if (avatar) {
-    //   msgChain.push(avatar);
-    // }
     bridgeMessage.author.username = kaiMsg.author.nickname;
     bridgeMessage.author.discriminator = kaiMsg.author.identifyNum;
+    bridgeMessage.author.avatar = kaiMsg.author.avatar;
     bridgeMessage.chain.push(MessageUtil.Plain(kaiMsg.content));
   }
   return bridgeMessage;
@@ -147,7 +144,11 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
         chain.push(MessageUtil.Plain(JSON.stringify(msg)));
     }
   }
-  const res = await BotService.qqBot.mirai.api.sendGroupMessage(bridgeMessage.chain, bridgeMessage.bridge.qqGroup, parseInt(bridgeMessage.quote));
+  if (bridgeMessage.author.avatar) {
+    const avatar = await generateQQMsgContentAvatar(bridgeMessage.author.avatar)
+    chain.unshift(avatar);
+  }
+  const res = await BotService.qqBot.mirai.api.sendGroupMessage(chain, bridgeMessage.bridge.qqGroup, parseInt(bridgeMessage.quote));
 }
 
 export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
@@ -190,6 +191,11 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
         messageContent += JSON.stringify(msg);
     }
   }
+  const result = await got.post(`${config.myDomainName}/api/remoteImageToLocal`, {
+    json: {url: bridgeMessage.author.avatar, useCache: true},
+    responseType: 'json'
+  });
+  const body: {data: string} = result.body as any;
 
   const msgText = JSON.stringify([
     {
@@ -206,8 +212,7 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
           "mode": "left",
           "accessory": {
             "type": "image",
-            "src": 'https://img.kaiheila.cn/assets/2021-01/7kr4FkWpLV0ku0ku.jpeg',
-            // "src": msg.author.avatarURL({format: 'png'}),
+            "src": body.data,
             "size": "sm",
             "circle": true
           }
