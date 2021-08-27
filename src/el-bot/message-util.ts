@@ -1,12 +1,14 @@
 import { Message as DiscordMessage, MessageAttachment, WebhookMessageOptions } from 'discord.js';
 import { Message as MiraiMessage, MessageType } from 'mirai-ts';
-import { KaiheilaAllMessage } from './interface';
+import { KaiheilaAllMessage, SingleMessage } from './interface';
 import * as KaiheilaBotRoot from 'kaiheila-bot-root';
 import { DatabaseService } from '../database.service';
 import { MessageEntity } from '../entity/message.entity';
 import { BotService } from './bot.service';
 import { MessageUtil } from './message';
 import { BridgeConfig } from '../interface';
+import { htmlOutput, parser } from 'discord-markdown';
+import * as log from "../utils/log5";
 
 export class BridgeMessage {
   source: 'QQ' | 'KHL' | 'DC';
@@ -20,7 +22,7 @@ export class BridgeMessage {
   }
   quote?: string;
   quoteMessage?: BridgeMessage;
-  chain: MessageType.MessageChain = [];
+  chain: SingleMessage[] = [];
   bridge: BridgeConfig;
 
   constructor() {
@@ -72,8 +74,19 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
   }
   bridgeMessage.author.username = msg.author.username;
   bridgeMessage.author.discriminator = msg.author.discriminator;
-  // 内容
-  bridgeMessage.chain.push(MessageUtil.Plain(msg.content));
+  if (msg.content) {
+    const ast = parser(msg.content);
+    ast.forEach((value: { type: DiscordMarkdownType, [prop: string]: any }) => {
+      if (value.type === 'br') {
+        bridgeMessage.chain.push(MessageUtil.Plain('\n'));
+      } else if (value.type === 'discordEveryone') {
+        bridgeMessage.chain.push(MessageUtil.AtAll());
+      } else {
+        log.message(`Discord Markdown: ${JSON.stringify(value)}`)
+        bridgeMessage.chain.push(MessageUtil.Plain(htmlOutput(value) as string));
+      }
+    })
+  }
   return bridgeMessage;
 }
 
@@ -85,16 +98,16 @@ export async function qqMessageToBridgeMessage(qqMsg: MessageType.GroupMessage):
       case 'Source':
         break;
       // case 'Quote':
-        // messageContent += await handlerForward(msg);
-        // break;
+      // messageContent += await handlerForward(msg);
+      // break;
       case 'Plain':
         bridgeMessage.chain.push(MessageUtil.Plain(msg.text));
         break;
       // case 'At':
       //   break;
-      // case 'AtAll':
-      //   messageContent += `@everyone`;
-      //   break;
+      case 'AtAll':
+        bridgeMessage.chain.push(MessageUtil.AtAll());
+        break;
       // case 'Face':
       //   messageContent += `[Face=${msg.faceId},${msg.name}]`;
       //   break;
@@ -123,6 +136,17 @@ export async function qqMessageToBridgeMessage(qqMsg: MessageType.GroupMessage):
 
 export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
   bridgeMessage.chain.unshift(MiraiMessage.Plain(`@[${bridgeMessage.source}] ${bridgeMessage.author.username}#${bridgeMessage.author.discriminator}\n`));
+  const chain: MessageType.MessageChain = [];
+  for (const msg of bridgeMessage.chain) {
+    switch (msg.type) {
+      case 'Plain':
+      case 'AtAll':
+        chain.push(msg);
+        break;
+      default:
+        chain.push(MessageUtil.Plain(JSON.stringify(msg)));
+    }
+  }
   const res = await BotService.qqBot.mirai.api.sendGroupMessage(bridgeMessage.chain, bridgeMessage.bridge.qqGroup, parseInt(bridgeMessage.quote));
 }
 
@@ -141,6 +165,9 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
       case 'Plain':
         messageContent += msg.text;
         break;
+      case 'AtAll':
+        messageContent += `@everyone`;
+        break;
       default:
         messageContent += JSON.stringify(msg);
     }
@@ -155,6 +182,9 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
     switch (msg.type) {
       case 'Plain':
         messageContent += msg.text;
+        break;
+      case 'AtAll':
+        messageContent += `(met)all(met)`;
         break;
       default:
         messageContent += JSON.stringify(msg);

@@ -1,0 +1,1 @@
+type DiscordMarkdownType = 'discordEveryone' | 'br';
