@@ -1,7 +1,6 @@
 import { default as Bot } from "el-bot";
 import config from '../config';
 import { Client, Intents } from 'discord.js';
-import { Client as KaiheilaClient } from 'kaiheilajs';
 import * as KaiheilaBotRoot from 'kaiheila-bot-root';
 import { KaiheilaBotInterface } from 'kaiheila-bot-root/dist/types/common';
 import { BotInstance } from 'kaiheila-bot-root/dist/BotInstance';
@@ -49,22 +48,6 @@ class _ElAndDiscordService {
   }
 
   async initKaiheila() {
-    // return new Promise((resolve, reject) => {
-    //   const client = this.kaiheila = new KaiheilaClient(config.kaiheilaBotToken, {
-    //     skipClientTriggers: true,
-    //     packetCompression: true,
-    //   });
-    //   client.login().then(() => {
-    //
-    //   }, (err) => {
-    //     log.message(err);
-    //     log.message('🌈', `Kaiheila 连接失败`);
-    //   })
-    //   client.once('ready', (sessionId) => {
-    //       resolve(client);
-    //     }
-    //   )
-    // });
     return new Promise(((resolve, reject) => {
       const bot = this.kaiheila = new KaiheilaBotRoot.KaiheilaBot({mode: 'websocket', token: config.kaiheilaBotToken, ignoreDecryptError: false});
       bot.connect();

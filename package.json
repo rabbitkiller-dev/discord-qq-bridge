@@ -26,7 +26,7 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": "src/el-bot",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -54,7 +54,6 @@
     "file-type": "^16.0.1",
     "got": "^11.8.1",
     "kaiheila-bot-root": "^0.2.9",
-    "kaiheilajs": "^3.9.5",
     "koishi": "^3.14.1",
     "koishi-adapter-kaiheila": "^1.2.1",
     "md5": "^2.3.0",

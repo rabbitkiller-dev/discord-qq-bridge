@@ -4,6 +4,7 @@
  */
 
 import {MessageType} from "mirai-ts";
+import { At } from './interface';
 
 /**
  * 生成引用的消息格式
@@ -20,11 +21,37 @@ function Quote(messageId: number): MessageType.Quote {
  * 生成艾特默认的消息格式
  * @param target QQ 号
  */
-function At(target: number): MessageType.At {
+function AtQQ(username: string, qqNumber: number): At {
   return {
     type: "At",
-    target,
-    display: "",
+    source: 'QQ',
+    username,
+    qqNumber,
+  };
+}
+
+/**
+ * 生成艾特默认的消息格式
+ * @param target QQ 号
+ */
+function AtKHL(username: string, discriminator: string): At {
+  return {
+    type: "At",
+    source: 'KHL',
+    username: username,
+    discriminator: discriminator,
+  };
+}
+/**
+ * 生成艾特默认的消息格式
+ * @param target QQ 号
+ */
+function AtDC(username: string, discriminator: string): At {
+  return {
+    type: "At",
+    source: 'DC',
+    username: username,
+    discriminator: discriminator,
   };
 }
 
@@ -170,7 +197,9 @@ function Poke(name: MessageType.PokeName): MessageType.Poke {
 
 export const MessageUtil = {
   Quote,
-  At,
+  AtQQ,
+  AtKHL,
+  AtDC,
   AtAll,
   Face,
   Plain,
