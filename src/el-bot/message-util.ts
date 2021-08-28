@@ -33,6 +33,7 @@ export class BridgeMessage {
 
   origin: {
     khlMessage: KaiheilaAllMessage,
+    dcMessage: DiscordMessage,
   } = {} as any;
 
   constructor() {
@@ -59,6 +60,7 @@ export async function kaiheilaMessageToBridgeMessage(allMessage: KaiheilaAllMess
 export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promise<BridgeMessage> {
   const bridgeMessage = new BridgeMessage();
   bridgeMessage.source = 'DC';
+  bridgeMessage.origin.dcMessage = msg;
   // 处理回复
   if (msg.reference && msg.reference.messageID) {
     const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
@@ -80,7 +82,7 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
   bridgeMessage.author.username = msg.author.username;
   bridgeMessage.author.discriminator = msg.author.discriminator;
   if (msg.content) {
-    bridgeMessage.chain.push(...parserDCMessage(msg.content));
+    bridgeMessage.chain.push(...(await parserDCMessage(msg.content, bridgeMessage)));
   }
   return bridgeMessage;
 }
@@ -136,7 +138,10 @@ export async function qqMessageToBridgeMessage(qqMsg: MessageType.GroupMessage):
 }
 
 export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
-  bridgeMessage.chain.unshift(MiraiMessage.Plain(toBridgeUserName({...bridgeMessage.author, source: bridgeMessage.source}) + '\n'));
+  bridgeMessage.chain.unshift(MiraiMessage.Plain(toBridgeUserName({
+    ...bridgeMessage.author,
+    source: bridgeMessage.source,
+  }) + '\n'));
   const chain: MessageType.MessageChain = [];
   for (const msg of bridgeMessage.chain) {
     switch (msg.type) {
@@ -164,7 +169,7 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
 
 export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
   const option: WebhookMessageOptions = {
-    username: toBridgeUserName({...bridgeMessage.author, source: bridgeMessage.source}).replace(/^@/, ''),
+    username: toBridgeUserName({ ...bridgeMessage.author, source: bridgeMessage.source }).replace(/^@/, ''),
     avatarURL: bridgeMessage.author.avatar,
     files: [],
   };
@@ -247,7 +252,7 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
           'type': 'section',
           'text': {
             'type': 'plain-text',
-            'content': toBridgeUserName({...bridgeMessage.author, source: bridgeMessage.source}),
+            'content': toBridgeUserName({ ...bridgeMessage.author, source: bridgeMessage.source }),
           },
           'mode': 'left',
           'accessory': {
@@ -300,16 +305,27 @@ export function parserQQMessage(message: string): Array<At | Plain> {
   return ast as any;
 }
 
-export function parserDCMessage(message: string): Array<At | AtAll | Plain> {
-  // const result: Array<At | AtAll | Plain> = [];
+export async function parserDCMessage(message: string, bridgeMessage: BridgeMessage): Promise<Array<At | AtAll | Plain>> {
+  const result: Array<At | AtAll | Plain> = [];
   const ast = markdownEngine.parserFor({
     atDC: bridgeRule.atDC,
     atQQ: bridgeRule.atQQ,
     atKHL: bridgeRule.atKHL,
+    discordUser: bridgeRule.discordUser,
     discordEveryone: bridgeRule.discordEveryone,
+    discordHere: bridgeRule.discordHere,
     Plain: bridgeRule.Plain,
-  })(message);
-  return ast as any;
+  })(message) as Array<{ type: 'discordUser', [prop: string]: any }>;
+  for (const value of ast) {
+    if (value.type === 'discordUser') {
+      const user = bridgeMessage.origin.dcMessage.mentions.users.find(user => user.id === value.id);
+      result.push(MessageUtil.AtDC(user.username, user.discriminator));
+    } else {
+      result.push(value as any);
+    }
+  }
+
+  return result;
 }
 
 export function parserKHLMessage(message: string): Array<At | AtAll | Plain> {

@@ -4,8 +4,9 @@ import { cacheDir, download, downloadImage, imageDiscordAvatarCacheDir } from '.
 import { createCanvas, loadImage } from 'canvas';
 import * as path from 'path';
 import * as fs from 'fs';
-import { htmlTag, markdownEngine } from 'discord-markdown';
+import { htmlTag, markdownEngine as markdown } from 'discord-markdown';
 import { AtAll } from './interface';
+import { MessageUtil } from './message';
 
 export const bridgeRule = {
   atDC: {
@@ -41,30 +42,52 @@ export const bridgeRule = {
       return '{{atDc}}';
     },
   },
-  Plain: Object.assign({}, markdownEngine.defaultRules.text, {
+  Plain: Object.assign({}, markdown.defaultRules.text, {
     match: source => /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff-]|\n\n|\n|\w+:\S|$)/.exec(source),
     parse: function(capture, parse, state) {
       return { type: 'Plain', text: capture[0] };
     },
     html: function(node, output, state) {
       if (state.escapeHTML)
-        return markdownEngine.sanitizeText(node.content);
+        return markdown.sanitizeText(node.content);
 
       return node.content;
     },
   }),
+  discordUser: {
+    order: markdown.defaultRules.strong.order,
+    match: source => /^<@!?([0-9]*)>/.exec(source),
+    parse: function(capture) {
+      return {
+        id: capture[1]
+      };
+    },
+    html: function(node, output, state) {
+      return htmlTag('span', state.discordCallback.user(node), { class: 'd-mention d-user' }, state);
+    }
+  },
   discordEveryone: {
-    order: markdownEngine.defaultRules.strong.order,
+    order: markdown.defaultRules.strong.order,
     match: source => /^@everyone/.exec(source),
     parse: function(): AtAll {
-      return { type: 'AtAll' };
+      return MessageUtil.AtAll();
     },
     html: function(node, output, state) {
       return htmlTag('span', state.discordCallback.everyone(node), { class: 'd-mention d-user' }, state);
     },
   },
+  discordHere: {
+    order: markdown.defaultRules.strong.order,
+    match: source => /^@here/.exec(source),
+    parse: function(): AtAll {
+      return MessageUtil.AtAll();
+    },
+    html: function(node, output, state) {
+      return htmlTag('span', state.discordCallback.here(node), { class: 'd-mention d-user' }, state);
+    }
+  },
   khlEveryone: {
-    order: markdownEngine.defaultRules.strong.order,
+    order: markdown.defaultRules.strong.order,
     match: source => /\(met\)all\(met\)/.exec(source),
     parse: function(): AtAll {
       return { type: 'AtAll' };
