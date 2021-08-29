@@ -9,7 +9,7 @@ import { Message as MiraiMessage, MessageType } from 'mirai-ts';
 import { KaiheilaAllMessage } from './interface';
 import {
   bridgeSendDiscord, bridgeSendKaiheila,
-  discordMessageToBridgeMessage, qqMessageToBridgeMessage,
+  discordMessageToBridgeMessage, qqMessageToBridgeMessage, saveBridgeMessage,
 } from './message-util';
 
 
@@ -24,6 +24,7 @@ export default async function bridgeQq() {
     bridgeMessage.bridge = bridge;
     await bridgeSendDiscord(bridgeMessage);
     await bridgeSendKaiheila(bridgeMessage);
+    await saveBridgeMessage(bridgeMessage);
     // log.error('[Discord]->[Kaiheila] 失败!(不应该出现的错误)');
     // log.error('[Discord]->[QQ] 失败!(不应该出现的错误)');
     // log.error('[Kaiheila]->[Discord] 失败!(不应该出现的错误)');

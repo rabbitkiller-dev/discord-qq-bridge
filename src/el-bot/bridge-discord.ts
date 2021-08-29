@@ -4,7 +4,7 @@ import config from '../config';
 import {
   BridgeMessage, bridgeSendKaiheila,
   bridgeSendQQ,
-  discordMessageToBridgeMessage,
+  discordMessageToBridgeMessage, saveBridgeMessage,
 } from './message-util';
 
 
@@ -23,5 +23,6 @@ export default async function bridgeDiscord() {
     bridgeMessage.bridge = bridge;
     await bridgeSendKaiheila(bridgeMessage);
     await bridgeSendQQ(bridgeMessage);
+    await saveBridgeMessage(bridgeMessage);
   });
 }

@@ -13,9 +13,9 @@ import { bridgeRule, generateQQMsgContentAvatar } from './utils';
 import got from 'got';
 import config from '../config';
 import { markdownEngine, rules } from 'discord-markdown';
+import { BridgeMessageEntity } from '../entity/bridge-message.entity';
 
 export class BridgeMessage {
-  source: 'QQ' | 'KHL' | 'DC';
   author: {
     username: string;
     avatar: string;
@@ -26,7 +26,6 @@ export class BridgeMessage {
     avatar: undefined,
     username: 'NoneUserName',
   };
-  quote?: string;
   quoteMessage?: BridgeMessage;
   chain: SingleMessage[] = [];
   bridge: BridgeConfig;
@@ -35,17 +34,19 @@ export class BridgeMessage {
     khlMessage: KaiheilaAllMessage,
     dcMessage: DiscordMessage,
   } = {} as any;
+  from: BridgeMessageEntity = new BridgeMessageEntity();
 
-  constructor() {
+  constructor(public source: 'QQ' | 'KHL' | 'DC') {
+    this.from.from = this.source;
   }
 
 }
 
 
 export async function kaiheilaMessageToBridgeMessage(allMessage: KaiheilaAllMessage): Promise<BridgeMessage> {
-  const bridgeMessage = new BridgeMessage();
-  bridgeMessage.source = 'KHL';
+  const bridgeMessage = new BridgeMessage('KHL');
   bridgeMessage.origin.khlMessage = allMessage;
+  bridgeMessage.from.khlMessageID = allMessage.data.msgId;
 
   if (allMessage.data.type === KaiheilaBotRoot.MessageType.text) {
     const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any;
@@ -58,20 +59,22 @@ export async function kaiheilaMessageToBridgeMessage(allMessage: KaiheilaAllMess
 }
 
 export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promise<BridgeMessage> {
-  const bridgeMessage = new BridgeMessage();
-  bridgeMessage.source = 'DC';
+  const bridgeMessage = new BridgeMessage('DC');
   bridgeMessage.origin.dcMessage = msg;
+  bridgeMessage.from.dcMessageID = msg.id;
   // 处理回复
   if (msg.reference && msg.reference.messageID) {
-    const messageRepo = DatabaseService.connection.getRepository(MessageEntity);
-    const refMsg = await messageRepo.findOne({ discordMessageID: msg.reference.messageID });
+    const messageRepo = DatabaseService.connection.getRepository(BridgeMessageEntity);
+    const refMsg = await messageRepo.findOne({ dcMessageID: msg.reference.messageID });
     // 尝试查找discord对应的qq消息id
     if (refMsg) {
-      bridgeMessage.quote = refMsg.qqMessageID;
+      bridgeMessage.quoteMessage = new BridgeMessage(refMsg.from);
+      bridgeMessage.quoteMessage.from = refMsg;
     } else {
       // 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
       const channel: any = await BotService.discord.channels.fetch(msg.channel.id);
       const replyMsg = await channel.messages.fetch(msg.reference.messageID);
+      bridgeMessage.quoteMessage = new BridgeMessage('DC');
       bridgeMessage.quoteMessage.chain.push(MessageUtil.Plain(`回复消息：${replyMsg.content}\n`));
     }
   }
@@ -88,15 +91,17 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
 }
 
 export async function qqMessageToBridgeMessage(qqMsg: MessageType.GroupMessage): Promise<BridgeMessage> {
-  const bridgeMessage = new BridgeMessage();
-  bridgeMessage.source = 'QQ';
+  const bridgeMessage = new BridgeMessage('QQ');
   for (const msg of qqMsg.messageChain) {
-    switch (msg.type) {
+    switch (msg.type) {  
       case 'Source':
+        bridgeMessage.from.qqMessageID = msg.id.toString();
         break;
-      // case 'Quote':
+      case 'Quote':
+        const messageRepo = DatabaseService.connection.getRepository(BridgeMessageEntity);
+        const refMsg = await messageRepo.findOne({ qqMessageID: msg.id.toString() });
       // messageContent += await handlerForward(msg);
-      // break;
+      break;
       case 'Plain':
         const atChain = parserQQMessage(msg.text);
         bridgeMessage.chain.push(...atChain);
@@ -143,6 +148,7 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
     source: bridgeMessage.source,
   }) + '\n'));
   const chain: MessageType.MessageChain = [];
+  let quote: string;
   for (const msg of bridgeMessage.chain) {
     switch (msg.type) {
       case 'At':
@@ -164,7 +170,11 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
     const avatar = await generateQQMsgContentAvatar(bridgeMessage.author.avatar);
     chain.unshift(avatar);
   }
-  const res = await BotService.qqBot.mirai.api.sendGroupMessage(chain, bridgeMessage.bridge.qqGroup, parseInt(bridgeMessage.quote));
+  if (bridgeMessage.quoteMessage && bridgeMessage.quoteMessage.from) {
+    quote = bridgeMessage.quoteMessage.from.qqMessageID;
+  }
+  const resultMessage = await BotService.qqBot.mirai.api.sendGroupMessage(chain, bridgeMessage.bridge.qqGroup, parseInt(quote));
+  bridgeMessage.from.qqMessageID = resultMessage.messageId.toString();
 }
 
 export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
@@ -175,6 +185,7 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
   };
   // 获取webhook
   const webhook = await BotService.discord.fetchWebhook(bridgeMessage.bridge.discord.id, bridgeMessage.bridge.discord.token);
+  const channel: any = await BotService.discord.channels.fetch(webhook.channelID);
   // 处理消息
   let messageContent = '';
   for (const msg of bridgeMessage.chain) {
@@ -204,7 +215,13 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
         messageContent += JSON.stringify(msg);
     }
   }
-  await webhook.send(messageContent, option) as DiscordMessage;
+  if (bridgeMessage.quoteMessage && bridgeMessage.quoteMessage.from) {
+    const replyMsg = await channel.messages.fetch(bridgeMessage.quoteMessage.from.dcMessageID);
+    console.log(replyMsg.reply)
+    console.log(replyMsg)
+  }
+  const resultMessage = await webhook.send(messageContent, option) as DiscordMessage;
+  bridgeMessage.from.dcMessageID = resultMessage.id;
 }
 
 export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
@@ -272,11 +289,13 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
       ],
     },
   ]);
-  await BotService.kaiheila.post('https://www.kaiheila.cn/api/v3/message/create', {
-    type: KaiheilaBotRoot.MessageType.card,
-    target_id: bridgeMessage.bridge.kaiheila.channelID,
-    content: msgText,
-  });
+  const resultMessage = await BotService.kaiheila.API.message.create(KaiheilaBotRoot.MessageType.card, bridgeMessage.bridge.kaiheila.channelID, msgText)
+  // const resultMessage: AxiosResponse<{ code: number, data: { msg_id: string } }> = await BotService.kaiheila.post('https://www.kaiheila.cn/api/v3/message/create', {
+  //   type: KaiheilaBotRoot.MessageType.card,
+  //   target_id: bridgeMessage.bridge.kaiheila.channelID,
+  //   content: msgText,
+  // });
+  bridgeMessage.from.khlMessageID = resultMessage.msgId;
 }
 
 
@@ -338,4 +357,9 @@ export function parserKHLMessage(message: string): Array<At | AtAll | Plain> {
     Plain: bridgeRule.Plain,
   })(message);
   return ast as any;
+}
+
+export async function saveBridgeMessage(bridgeMessage: BridgeMessage) {
+  const messageEntityRepository = DatabaseService.connection.getRepository(BridgeMessageEntity);
+  return messageEntityRepository.save(bridgeMessage.from);
 }

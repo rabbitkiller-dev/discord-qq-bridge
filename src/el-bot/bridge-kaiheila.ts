@@ -10,7 +10,7 @@ import { KaiheilaAllMessage } from './interface';
 import {
   BridgeMessage, bridgeSendDiscord,
   bridgeSendQQ,
-  kaiheilaMessageToBridgeMessage
+  kaiheilaMessageToBridgeMessage, saveBridgeMessage,
 } from './message-util';
 
 
@@ -28,6 +28,7 @@ export default async function bridgeKai() {
     bridgeMessage.bridge = bridge;
     await bridgeSendDiscord(bridgeMessage);
     await bridgeSendQQ(bridgeMessage);
+    await saveBridgeMessage(bridgeMessage);
   });
 }
 
