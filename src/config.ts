@@ -10,6 +10,7 @@ interface BridgeConfig {
   qqGroup: number
 }
 export interface Config {
+  myDomainName: string,
   qqBot: number,
   setting: {
     host: string,
