@@ -18,7 +18,8 @@ export interface KaiheilaAllMessage {
 export type SingleMessage =
   | Plain
   | At
-  | AtAll;
+  | AtAll
+  | Image;
 
 interface BaseSingleMessage {
   type: string;
@@ -52,4 +53,11 @@ export interface At extends BaseSingleMessage {
  */
 export interface AtAll extends BaseSingleMessage {
   type: "AtAll";
+}
+
+export interface Image extends BaseSingleMessage {
+  type: 'Image';
+  url: string; // 图片路径
+  local?: string; // 图片本地路径
+  cache?: string; // 图片缓存路径(bridge.rabbitkiller.dev的访问路径)
 }

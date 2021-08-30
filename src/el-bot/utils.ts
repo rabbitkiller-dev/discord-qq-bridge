@@ -7,6 +7,8 @@ import * as fs from 'fs';
 import { htmlTag, markdownEngine as markdown } from 'discord-markdown';
 import { AtAll } from './interface';
 import { MessageUtil } from './message';
+import got from 'got';
+import config from '../config';
 
 export const bridgeRule = {
   atDC: {
@@ -112,4 +114,13 @@ export async function generateQQMsgContentAvatar(url: string, useCache?: boolean
   stream.close();
   let relativePath = path.join('../../../../', imageDiscordAvatarCacheDir.replace(cacheDir, 'cache'), path.basename(filePath));
   return MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/'));
+}
+
+export async function remoteImageToLocal(avatar: string, useCache: boolean = true): Promise<string> {
+  const result = await got.post(`${config.myDomainName}/api/remoteImageToLocal`, {
+    json: {url: avatar, useCache: useCache},
+    responseType: 'json',
+  });
+  const body: { data: string } = result.body as any;
+  return body.data;
 }
