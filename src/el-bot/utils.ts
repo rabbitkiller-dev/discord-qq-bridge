@@ -88,6 +88,24 @@ export const bridgeRule = {
       return htmlTag('span', state.discordCallback.here(node), { class: 'd-mention d-user' }, state);
     }
   },
+  discordEmoji: {
+    order: markdown.defaultRules.strong.order,
+    match: source => /^<(a?):(\w+):(\d+)>/.exec(source),
+    parse: function(capture) {
+      return {
+        animated: capture[1] === "a",
+        name: capture[2],
+        id: capture[3],
+      };
+    },
+    html: function(node, output, state) {
+      return htmlTag('img', '', {
+        class: `d-emoji${node.animated ? ' d-emoji-animated' : ''}`,
+        src: `https://cdn.discordapp.com/emojis/${node.id}.${node.animated ? 'gif' : 'png'}`,
+        alt: `:${node.name}:`
+      }, false, state);
+    }
+  },
   khlEveryone: {
     order: markdown.defaultRules.strong.order,
     match: source => /\(met\)all\(met\)/.exec(source),

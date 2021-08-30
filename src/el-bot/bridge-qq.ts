@@ -20,8 +20,7 @@ export default async function bridgeQq() {
     if (!bridge || !bridge.kaiheila) {
       return;
     }
-    const bridgeMessage = await qqMessageToBridgeMessage(qqMsg);
-    bridgeMessage.bridge = bridge;
+    const bridgeMessage = await qqMessageToBridgeMessage(qqMsg, bridge);
     await bridgeSendDiscord(bridgeMessage);
     await bridgeSendKaiheila(bridgeMessage);
     await saveBridgeMessage(bridgeMessage);
