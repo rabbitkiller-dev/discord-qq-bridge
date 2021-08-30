@@ -1,6 +1,6 @@
 {
   "name": "discord-qq-bridge",
-  "version": "1.6.3",
+  "version": "2.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
