@@ -4,5 +4,8 @@ export interface BridgeConfig {
         token: string,
         channelID: string,
     },
-    qqGroup: number
+    qqGroup: number;
+    kaiheila: {
+        channelID: string,
+    }
 }

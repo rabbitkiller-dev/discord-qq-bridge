@@ -34,7 +34,7 @@ async function initCache() {
     }
 }
 
-export async function download(url: string, useCache: boolean): Promise<string> {
+export async function download(url: string, useCache: boolean = true): Promise<string> {
     await initCache();
     const fileMD5Name = md5(url);
     const isExists = fs.readdirSync(assetsCacheDir).find((file) => file.startsWith(`${fileMD5Name}.`));

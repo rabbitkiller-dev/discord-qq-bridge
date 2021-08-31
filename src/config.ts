@@ -1,14 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { BridgeConfig } from './interface';
 
-interface BridgeConfig {
-  discord: {
-    id: string,
-    token: string,
-    channelID: string,
-  },
-  qqGroup: number
-}
 export interface Config {
   myDomainName: string,
   qqBot: number,
@@ -20,6 +13,7 @@ export interface Config {
   },
   discordBot: string;
   discordBotToken: string;
+  kaiheilaBotToken: string;
   bridges: BridgeConfig[];
   autoApproveQQGroup: Array<{qqGroup: number, reg: string}>
   proxy: string;
