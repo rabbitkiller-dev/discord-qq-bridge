@@ -1,0 +1,23 @@
+{
+    "qqBot": 0,
+    "setting": {
+        "host": "localhost",
+        "port": 8080,
+        "authKey": "INITKEYKPRGCLwL",
+        "enableWebsocket": false
+    },
+    "discordBot": "",
+    "discordBotToken": "",
+    "bridges": [
+        {
+            "discord": {
+                "id": "",
+                "token": "",
+                "channelID": ""
+            },
+            "qqGroup": 0
+        }
+    ],
+    "autoApproveQQGroup": [],
+    "proxy": ""
+}
