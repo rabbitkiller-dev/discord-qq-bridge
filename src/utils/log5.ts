@@ -15,6 +15,7 @@ export function message(...messages) {
 }
 
 export function log5(type, ...messages) {
+    console.log(...messages)
     let texts = []
     const now = dayjs()
     const file = path.join(__dirname, '../../logs', `${type}.${now.format('YYYY-MM-DD')}.log`)
@@ -30,8 +31,7 @@ export function log5(type, ...messages) {
             texts.push(String(i))
         }
     }
-    const text = texts.join(' ').replace(/\n/g, ' ') + '\n';
-    console.log(text);
+    const text = texts.join(' ').replace(/\n/g, ' ') + '\n'
     fs.writeFile(file, text, { flag: 'a' }, function (err) {
         if (err) console.error(err)
     })

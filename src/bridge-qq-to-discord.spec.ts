@@ -1,6 +1,6 @@
-import bridgeDiscordToQQ, {handlerAt, parseEmoji} from './bridge-discord-to-qq.el';
+import bridgeDiscordToQQ, {handlerAt, parseEmoji} from './bridge-discord-to-qq';
 
-describe('bridge-bridge-to-qq.bot.spec.ts', () => {
+describe('bridge-bridge-to-qq.spec.ts', () => {
   beforeAll(async ()=>{
   });
   it('parseEmoji', async () => {

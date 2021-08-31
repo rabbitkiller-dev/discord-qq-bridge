@@ -49,13 +49,11 @@ discordBotToken: '', // discord申请的bot id对应的token
 | qqBot | number | qqBot的qq号 |
 | discordBot | string | discordBot的ID |
 | discordBotToken | string | discordBot的token |
-| kaiheilaBotToken | string | 开黑啦Bot的token |
 | bridges | list | 联通桥 |
 | bridges.discord.id | string | 频道webhook id |
 | bridges.discord.token | string | 频道webhook token |
 | bridges.discord.channelID | string | 频道id |
 | bridges.qqGroup | number | q群号 |
-| bridges.kaiheila.channelID | string | 频道id |
 
 ### 三、运行
 ```shell script
@@ -80,39 +78,15 @@ pm2 ls
 ```
 
 ## 支持功能
-### QQ 
+### QQ -> Discord
+- [x] 回复消息同步至Discord
+- [x] 支持表情、图片和gif消息同步至Discord
+- [x] 支持回复消息同步至Discord
 
-1. 消息同步至Discord
-
-    - [x] 回复消息同步
-    - [x] 支持表情、图片和gif消息同步
-    - [x] 支持回复消息同步
-
-2. 消息同步至开黑啦
-
-    - [ ] 回复消息同步
-    - [ ] 支持表情、图片和gif消息同步
-    - [ ] 支持回复消息同步
-
-3. qq群自动审批
-
-### Discord
-
-1. 消息同步至QQ
-
-    - [x] 回复消息同步
-    - [x] 支持图片和gif消息同步
-    - [x] 支持回复消息同步
-
-2. 消息同步至开黑啦
-
-    - [ ] 回复消息同步
-    - [ ] 支持图片和gif消息同步
-    - [ ] 支持回复消息同步
-
-### 开黑啦
-1. 消息同步至QQ
-2. 消息同步至Discord
+### Discord -> QQ
+- [x] 回复消息同步至Discord
+- [x] 支持图片和gif消息同步至Discord
+- [x] 支持回复消息同步至Discord
 
 ## 文档相关
 官方api文档
