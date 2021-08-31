@@ -181,6 +181,10 @@ async function qqMessageChainToBridgeMessageChain(bridgeMessage: BridgeMessage, 
 }
 
 export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
+  const bridge = bridgeMessage.bridge;
+  if (!bridge.qqGroup) {
+    return;
+  }
   bridgeMessage.chain.unshift(MiraiMessage.Plain(toBridgeUserName({
     ...bridgeMessage.author,
     source: bridgeMessage.source,
@@ -224,6 +228,10 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
 }
 
 export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
+  const bridge = bridgeMessage.bridge;
+  if (!bridge.discord || !bridge.discord.id || !bridge.discord.token || !bridge.discord.channelID) {
+    return;
+  }
   const option: WebhookMessageOptions = {
     username: toBridgeUserName({...bridgeMessage.author, source: bridgeMessage.source}).replace(/^@/, ''),
     avatarURL: bridgeMessage.author.avatar,
@@ -299,7 +307,8 @@ async function toDiscordQuoteMessage(bridgeMessage: BridgeMessage, webhook: Disc
   }
   return messageContent.split('\n').map((str) => '> ' + str).join('\n');
 }
-async function toDiscordAtUser(at: At, webhook: DiscordWebhook){
+
+async function toDiscordAtUser(at: At, webhook: DiscordWebhook) {
   if (at.source === 'DC') {
     // 获取guild, 在通过guild获取所有用户
     const guild: Guild = await BotService.discord.guilds.fetch(webhook.guildID);
@@ -314,6 +323,9 @@ async function toDiscordAtUser(at: At, webhook: DiscordWebhook){
 
 
 export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
+  if (!bridgeMessage.bridge.kaiheila || !bridgeMessage.bridge.kaiheila.channelID) {
+    return;
+  }
   const chain: Array<KhlInterface.KMarkdown | KhlInterface.ImageGroup> = [];
   // 处理消息
   for (const msg of bridgeMessage.chain) {

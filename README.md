@@ -22,7 +22,10 @@ Discord制作机器人不需要类似go-cqhttp的中转程序。官方已经提�
 
 1. 安装java jdk 并且11以上的版本，配置好java环境变量， 控制台输入`java --version` 能看到版本信息就正常
 2. 修改文件 `mcl-1.1.0-beta.1/config/Console/AutoLogin.yml` 添加属于你的qq账号
-3. 进入`mcl-1.1.0-beta.1`目录，运行`./mcl`
+3. 进入`mcl-1.1.0-beta.1`目录，运行`java -jar mcl.jar -u`
+  
+  > 可以选择不使用`java -jar mcl.jar -u`, 直接使用`./mcl`启动但是jar包会自动更新, 所以不推荐
+
 正常情况，bot收到消息后，控制台会看的到就成功了
    
 > 注： 推荐使用docker的方式，不只是本地，部署到云环境也方便
