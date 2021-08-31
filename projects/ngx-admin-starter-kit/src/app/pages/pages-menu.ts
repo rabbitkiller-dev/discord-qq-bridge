@@ -5,19 +5,25 @@ export const MENU_ITEMS: NbMenuItem[] = [
     title: 'Dashboard',
     icon: 'home-outline',
     link: '/pages/dashboard',
+    home: false,
+  },
+  {
+    title: '消息桥设置',
+    icon: 'home-outline',
+    link: '/pages/bridge-config',
     home: true,
   },
   {
     title: 'QQ群自动同意审批',
     icon: 'home-outline',
     link: '/pages/config',
-    home: true,
+    home: false,
   },
   {
     title: '桥同步设置',
     icon: 'home-outline',
     link: '/pages/admin',
-    home: true,
+    home: false,
   },
   {
     title: 'FEATURES',

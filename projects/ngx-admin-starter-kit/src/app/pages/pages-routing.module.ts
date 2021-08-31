@@ -5,6 +5,7 @@ import { PagesComponent } from './pages.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { AdminComponent } from './admin/admin.component';
 import { ConfigComponent } from './admin/config.component';
+import { BridgeConfigComponent } from './admin/bridge-config.component';
 
 const routes: Routes = [{
   path: '',
@@ -17,6 +18,10 @@ const routes: Routes = [{
     {
       path: 'config',
       component: ConfigComponent,
+    },
+    {
+      path: 'bridge-config',
+      component: BridgeConfigComponent,
     },
     {
       path: 'admin',

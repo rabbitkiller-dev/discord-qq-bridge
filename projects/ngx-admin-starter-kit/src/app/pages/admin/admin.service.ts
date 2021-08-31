@@ -10,7 +10,10 @@ export interface BridgeConfig {
     token: string,
     channelID: string,
   },
-  qqGroup: number
+  qqGroup: number;
+  kaiheila: {
+    channelID: string,
+  }
 }
 export interface Config {
   qqBot: number,
@@ -54,7 +57,23 @@ export interface DToQUserLimitEntity {
   createDate: Date;
 }
 
-
+export interface DiscordAllGuildAndChannelsInfo {
+  guild: Array<{
+    id: string,
+    name: string
+    channels: Array<{ id: string, name: string }>
+  }>;
+}
+export interface KHLAllInfo {
+  guild: Array<{
+    id: string,
+    name: string
+    channels: Array<{ id: string, name: string }>
+  }>;
+}
+export interface QQAllInfo {
+  group: Array<{id: number, name: string}>
+}
 @Injectable({providedIn: 'root'})
 export class AdminService {
   guild: string;
@@ -115,6 +134,25 @@ export class AdminService {
 
   saveAllDToQUserLimit(entity: Partial<DToQUserLimitEntity>): Observable<DToQUserLimitEntity> {
     return this.http.post<{ data: DToQUserLimitEntity }>('/api/bridge/DToQUserLimit', entity).pipe(map((result) => {
+      return result.data;
+    }));
+  }
+
+  discordAllGuildAndChannelsInfo(): Observable<DiscordAllGuildAndChannelsInfo> {
+    return this.http.get<{ data: DiscordAllGuildAndChannelsInfo }>('/api/bridge/discordAllGuildAndChannelsInfo')
+      .pipe(map((result) => {
+      return result.data;
+    }));
+  }
+  khlAllInfo(): Observable<KHLAllInfo> {
+    return this.http.get<{ data: KHLAllInfo }>('/api/bridge/khlAllInfo')
+      .pipe(map((result) => {
+      return result.data;
+    }));
+  }
+  qqAllInfo(): Observable<QQAllInfo> {
+    return this.http.get<{ data: QQAllInfo }>('/api/bridge/qqAllInfo')
+      .pipe(map((result) => {
       return result.data;
     }));
   }

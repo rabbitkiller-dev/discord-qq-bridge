@@ -9,11 +9,6 @@ export class AppController {
   constructor(private readonly appService: AppService) {
   }
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
   @Post('/api/remoteImageToLocal')
   async remoteImageToLocal(@Body() body: { url: string, useCache: boolean }, @Res() res: Response) {
     const filepath = await download(body.url, body.useCache);

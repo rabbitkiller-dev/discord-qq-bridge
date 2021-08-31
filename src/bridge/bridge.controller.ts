@@ -22,12 +22,14 @@ export class BridgeController {
   getBridgeConfig(@Res() res: Response) {
     res.status(200).json({data: config});
   }
+
   /**
    * 保存服务器配置
    */
   @Post('config')
   saveBridgeConfig(@Body() body: Config, @Res() res: Response) {
     config.autoApproveQQGroup = body.autoApproveQQGroup;
+    config.bridges = body.bridges;
     fs.writeFileSync(path.join(__dirname, '../../config.json'), JSON.stringify(config, undefined, '  '));
     res.status(200).json({data: config});
   }
@@ -96,5 +98,79 @@ export class BridgeController {
     res.status(200).json({data: result});
   }
 
+  @Get('discordAllGuildAndChannelsInfo')
+  async getDiscordAllGuildAndChannelsInfo(@Res() res: Response) {
+    const result: DiscordAllGuildAndChannelsInfo = {
+      guild: [],
+    }
+    BotService.discord.guilds.cache.forEach((value, key, map) => {
+      const channels = [];
+      BotService.discord.guilds.cache.get(key).channels.cache.forEach((value, key, map) => {
+        if(value.type === 'text'){
+          channels.push({id: key, name: value.name})
+        }
+      })
+      result.guild.push({
+        id: key, name: value.name, channels
+      })
+    })
+    res.status(200).json({data: result});
+  }
 
+  @Get('khlAllInfo')
+  async getKhlAllInfo(@Res() res: Response) {
+    const result: KHLAllInfo = {
+      guild: [],
+    }
+    const guildList = await BotService.kaiheila.API.guild.list();
+    for(let guild of guildList.items){
+      const channelList = await await BotService.kaiheila.API.channel.list(guild.id);
+      const channels = [];
+      channelList.items.forEach(channel => {
+        if(channel.type !== 1 || channel.isCategory){
+          return;
+        }
+        channels.push({id: channel.id, name: channel.name});
+      })
+      result.guild.push({
+        id: guild.id,
+        name: guild.name,
+        channels
+      })
+    }
+    res.status(200).json({data: result});
+  }
+  @Get('qqAllInfo')
+  async getQQAllInfo(@Res() res: Response) {
+    const result: QQAllInfo = {
+      group: [],
+    }
+    const groupList = await BotService.qqBot.mirai.api.groupList();
+    groupList.forEach((group)=>{
+      result.group.push({
+        id: group.id,
+        name: group.name,
+      })
+    })
+
+    res.status(200).json({data: result});
+  }
+
+}
+interface QQAllInfo {
+  group: Array<{id: number, name: string}>
+}
+interface KHLAllInfo {
+  guild: Array<{
+    id: string,
+    name: string
+    channels: Array<{ id: string, name: string }>
+  }>;
+}
+interface DiscordAllGuildAndChannelsInfo {
+  guild: Array<{
+    id: string,
+    name: string
+    channels: Array<{ id: string, name: string }>
+  }>;
 }
