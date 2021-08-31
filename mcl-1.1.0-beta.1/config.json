@@ -5,6 +5,7 @@
     "https://maven.aliyun.com/repository/public"
   ],
   "packages": [
+    {
       "id": "org.bouncycastle:bcprov-jdk15on",
       "channel": "stable",
       "version": "1.64",
