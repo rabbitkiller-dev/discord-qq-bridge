@@ -17,4 +17,3 @@ export class DToQUserLimitEntity {
     @CreateDateColumn()
     createDate: Date;
 }
-    

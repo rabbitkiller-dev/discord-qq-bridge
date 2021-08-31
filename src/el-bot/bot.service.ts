@@ -1,15 +1,11 @@
-import { default as Bot } from "el-bot";
+import {default as Bot} from "el-bot";
 import config from '../config';
-import { Client, Intents } from 'discord.js';
-import * as KaiheilaBotRoot from 'kaiheila-bot-root';
-import { KaiheilaBotInterface } from 'kaiheila-bot-root/dist/types/common';
-import { BotInstance } from 'kaiheila-bot-root/dist/BotInstance';
+import {Client, Intents} from 'discord.js';
 import * as log from "../utils/log5";
 
 class _ElAndDiscordService {
   discord: Client;
   qqBot: Bot;
-  kaiheila: BotInstance & KaiheilaBotInterface;
 
   constructor() {
   }
@@ -40,19 +36,15 @@ class _ElAndDiscordService {
         });
       }
 
-      discord.once('ready', () => {
-        resolve(discord);
+      discord.on('ready', () => {
+        try {
+          resolve(discord)
+        } catch (error) {
+          reject(error);
+        }
       });
       loginDiscord();
     })
-  }
-
-  async initKaiheila() {
-    return new Promise(((resolve, reject) => {
-      const bot = this.kaiheila = new KaiheilaBotRoot.KaiheilaBot({mode: 'websocket', token: config.kaiheilaBotToken, ignoreDecryptError: false});
-      bot.connect();
-      resolve(this.kaiheila);
-    }))
   }
 }
 
