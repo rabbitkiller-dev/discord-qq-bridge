@@ -4,7 +4,7 @@ import {
   AdminService,
   BridgeConfig,
   Config,
-  DiscordAllGuildAndChannelsInfo,
+  DiscordAllGuildAndChannelsInfo, DiscordGuildInfo,
   KHLAllInfo,
   QQAllInfo
 } from './admin.service';
@@ -98,7 +98,13 @@ export class BridgeConfigComponent implements OnInit {
   }
 
   selectWebhookChange(bridge: BridgeConfig) {
-    const webhook = this.discordInfo.webhooks.find(webhook => webhook.id === bridge.discord.id);
+    const webhook = this.getChannelGuild(bridge.discord.channelID).webhooks.find(webhook => webhook.id === bridge.discord.id);
     bridge.discord.token = webhook.token;
+  }
+
+  getChannelGuild(channelID: string): DiscordGuildInfo {
+    return this.discordInfo.guild.find((guild) => {
+      return guild.channels.find(channel => channel.id === channelID);
+    })
   }
 }

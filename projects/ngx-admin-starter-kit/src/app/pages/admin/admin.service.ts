@@ -59,11 +59,12 @@ export interface DToQUserLimitEntity {
 }
 
 export interface DiscordAllGuildAndChannelsInfo {
-  guild: Array<{
-    id: string,
-    name: string
-    channels: Array<{ id: string, name: string }>
-  }>;
+  guild: DiscordGuildInfo[];
+}
+export interface DiscordGuildInfo {
+  id: string;
+  name: string
+  channels: Array<{ id: string, name: string }>;
   hasManageWebhooks: boolean;
   webhooks: Array<{ id: string, name: string, token: string }>
 }

@@ -8,6 +8,7 @@ import { BotService } from '../el-bot/bot.service';
 import config, { Config } from '../config';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Collection, Snowflake, Webhook } from 'discord.js';
 
 @Controller('/api/bridge')
 export class BridgeController {
@@ -101,18 +102,14 @@ export class BridgeController {
   @Get('discordAllGuildAndChannelsInfo')
   async getDiscordAllGuildAndChannelsInfo(@Res() res: Response) {
     const result: DiscordAllInfo = {
-      guild: [],
-      webhooks: [],
-      hasManageWebhooks: false
+      guild: []
     }
     const guildList = BotService.discord.guilds.cache.array();
     for (const guild of guildList) {
-      result.hasManageWebhooks = guild.me.hasPermission('MANAGE_WEBHOOKS')
-      if (result.hasManageWebhooks) {
-        const webhooks = await guildList[0].fetchWebhooks();
-        webhooks.forEach((webhook) => {
-          result.webhooks.push({id: webhook.id, name: webhook.name, token: webhook.token});
-        })
+      const hasManageWebhooks = guild.me.hasPermission('MANAGE_WEBHOOKS')
+      let webhooks: Collection<Snowflake, Webhook> = new Collection();
+      if (hasManageWebhooks) {
+        webhooks = await guild.fetchWebhooks();
       }
       const channels = [];
       BotService.discord.guilds.cache.get(guild.id).channels.cache.forEach((value, key, map) => {
@@ -121,7 +118,13 @@ export class BridgeController {
         }
       })
       result.guild.push({
-        id: guild.id, name: guild.name, channels
+        id: guild.id,
+        name: guild.name,
+        channels,
+        hasManageWebhooks,
+        webhooks: webhooks.array().map((webhook) => {
+          return {id: webhook.id, name: webhook.name, token: webhook.token}
+        })
       })
     }
     res.status(200).json({data: result});
@@ -185,8 +188,8 @@ interface DiscordAllInfo {
   guild: Array<{
     id: string,
     name: string
-    channels: Array<{ id: string, name: string }>
+    channels: Array<{ id: string, name: string }>;
+    hasManageWebhooks: boolean;
+    webhooks: Array<{ id: string, name: string, token: string }>
   }>;
-  hasManageWebhooks: boolean;
-  webhooks: Array<{ id: string, name: string, token: string }>
 }

@@ -17,16 +17,16 @@
             </nb-select>
           </div>
 
-          <ng-container *ngIf="discordInfo.hasManageWebhooks">
+          <ng-container *ngIf="getChannelGuild(bridge.discord.channelID)?.hasManageWebhooks">
             <div class="form-group">
               <label for="DiscordChannel" class="label">Discord频道Webhook</label>
               <nb-select selected="1" style="width: 100%;max-width: unset;" id="DiscordChannelWebhook"
                          [(ngModel)]="bridge.discord.id" (ngModelChange)="selectWebhookChange(bridge)">
-                <nb-option [value]="item.id" *ngFor="let item of discordInfo.webhooks">{{item.name}}</nb-option>
+                <nb-option [value]="item.id" *ngFor="let item of getChannelGuild(bridge.discord.channelID).webhooks">{{item.name}}</nb-option>
               </nb-select>
             </div>
           </ng-container>
-          <ng-container *ngIf="!discordInfo.hasManageWebhooks">
+          <ng-container *ngIf="!getChannelGuild(bridge.discord.channelID)?.hasManageWebhooks">
             <div class="form-group">
               <label for="DiscordChannel" class="label">Discord频道机器人ID</label>
               <input type="text" nbInput fullWidth id="DiscordBotID" [(ngModel)]="bridge.discord.id">
