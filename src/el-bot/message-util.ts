@@ -91,7 +91,19 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
     // 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
     const channel: any = await BotService.discord.channels.fetch(msg.channel.id);
     const replyMsg = await channel.messages.fetch(msg.reference.messageID);
-    bridgeMessage.quoteMessage = new BridgeMessage('DC');
+    if(replyMsg.author.discriminator === '0000'){
+      const ast = markdownEngine.parserFor({
+        atQQ: bridgeRule.atQQ,
+        atKHL: bridgeRule.atKHL,
+        Plain: bridgeRule.Plain
+      })(`@${replyMsg.author.username}`);
+      console.log(ast);
+      bridgeMessage.quoteMessage.author = {...ast[0]} as any;
+    }else{
+      bridgeMessage.quoteMessage.author.username = replyMsg.author.username;
+      bridgeMessage.quoteMessage.author.discriminator = replyMsg.author.discriminator;
+      bridgeMessage.quoteMessage.author.avatar = replyMsg.author.avatarURL({format: 'png'});
+    }
     if (replyMsg.content) {
       bridgeMessage.quoteMessage.chain.push(...(await parserDCMessage(replyMsg.content, bridgeMessage.quoteMessage)));
     }
@@ -232,12 +244,57 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
     const avatar = await generateQQMsgContentAvatar(bridgeMessage.author.avatar);
     chain.unshift(avatar);
   }
-  if (bridgeMessage.quoteMessage && bridgeMessage.quoteMessage.from) {
+  if (bridgeMessage.quoteMessage?.from?.qqMessageID) {
     quote = bridgeMessage.quoteMessage.from.qqMessageID;
+  } else {
+    let replyMessageContent: string = '';
+    for (const msg of bridgeMessage.quoteMessage.chain) {
+      switch (msg.type) {
+        case 'At':
+          replyMessageContent += toBridgeUserName({...msg});
+          break;
+        case 'Image':
+          replyMessageContent += '[图片]';
+          break;
+        case 'Plain':
+          replyMessageContent += msg.text;
+          break;
+        case 'AtAll':
+          replyMessageContent += '[@所有人]';
+          break;
+        default:
+          replyMessageContent += `[${JSON.stringify(msg)}]`;
+      }
+    }
+    chain.unshift(MessageUtil.Plain(replyMessageContent.split('\n').map((str) => '> ' + str).join('\n') + '\n'));
+    const at: At = {
+      type: 'At',
+      source: bridgeMessage.quoteMessage.source,
+      ...bridgeMessage.quoteMessage.author
+    }
+    chain.unshift()
+    const userHead: MessageType.SingleMessage[] = [
+      MessageUtil.Plain(`> 回复 `),
+      toQQUser(at),
+      MessageUtil.Plain(` 的消息\n`)
+    ];
+    chain.unshift(...userHead);
   }
   const resultMessage = await BotService.qqBot.mirai.api.sendGroupMessage(chain, bridgeMessage.bridge.qqGroup, parseInt(quote));
   bridgeMessage.from.qqMessageID = resultMessage.messageId.toString();
 }
+
+/**
+ * at 转成 at QQ用户格式
+ */
+function toQQUser(msg: At): MessageType.At | MessageType.Plain {
+  if (msg.source === 'QQ') {
+    return MiraiMessage.At(msg.qqNumber);
+  } else {
+    return MessageUtil.Plain(toBridgeUserName({...msg}));
+  }
+}
+
 /**
  * BridgeMessage 发送到 Discord
  */
@@ -322,7 +379,10 @@ async function toDiscordQuoteMessage(bridgeMessage: BridgeMessage, webhook: Disc
   return messageContent.split('\n').map((str) => '> ' + str).join('\n');
 }
 
-async function toDiscordAtUser(at: At, webhook: DiscordWebhook) {
+/**
+ * at 转成 at Discord用户格式
+ */
+async function toDiscordAtUser(at: At, webhook: DiscordWebhook): Promise<string> {
   if (at.source === 'DC') {
     // 获取guild, 在通过guild获取所有用户
     const guild: Guild = await BotService.discord.guilds.fetch(webhook.guildID);
@@ -447,6 +507,9 @@ async function insertKhlChain(type: 'image' | 'plain', text: string, chain: Arra
 
 }
 
+/**
+ * 用户信息统一字符名称
+ */
 function toBridgeUserName(author: {
   source: 'QQ' | 'KHL' | 'DC',
   username: string,
@@ -462,6 +525,9 @@ function toBridgeUserName(author: {
   }
 }
 
+/**
+ * 解析 qq 文本消息
+ */
 export function parserQQMessage(message: string): Array<At | Plain> {
   const ast = markdownEngine.parserFor({
     atDC: bridgeRule.atDC,
@@ -478,7 +544,9 @@ export function parserQQMessage(message: string): Array<At | Plain> {
   }
   return ast as any;
 }
-
+/**
+ * 解析 Discord 文本消息
+ */
 export async function parserDCMessage(message: string, bridgeMessage: BridgeMessage): Promise<Array<At | AtAll | Plain | Image>> {
   const result: Array<At | AtAll | Plain | Image> = [];
   const ast = markdownEngine.parserFor({
@@ -510,7 +578,9 @@ export async function parserDCMessage(message: string, bridgeMessage: BridgeMess
   }
   return result;
 }
-
+/**
+ * 解析 开黑啦 文本消息
+ */
 export function parserKHLMessage(message: string): Array<At | AtAll | Plain> {
   // const result: Array<At | AtAll | Plain> = [];
   const ast = markdownEngine.parserFor({
@@ -530,6 +600,9 @@ export function parserKHLMessage(message: string): Array<At | AtAll | Plain> {
   return ast as any;
 }
 
+/**
+ * 保存统一消息关联关系
+ */
 export async function saveBridgeMessage(bridgeMessage: BridgeMessage) {
   const messageEntityRepository = DatabaseService.connection.getRepository(BridgeMessageEntity);
   return messageEntityRepository.save(bridgeMessage.from);
