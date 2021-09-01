@@ -91,7 +91,7 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
     // 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
     const channel: any = await BotService.discord.channels.fetch(msg.channel.id);
     const replyMsg = await channel.messages.fetch(msg.reference.messageID);
-    if(replyMsg.author.discriminator === '0000'){
+    if (replyMsg.author.discriminator === '0000') {
       const ast = markdownEngine.parserFor({
         atQQ: bridgeRule.atQQ,
         atKHL: bridgeRule.atKHL,
@@ -99,7 +99,7 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
       })(`@${replyMsg.author.username}`);
       console.log(ast);
       bridgeMessage.quoteMessage.author = {...ast[0]} as any;
-    }else{
+    } else {
       bridgeMessage.quoteMessage.author.username = replyMsg.author.username;
       bridgeMessage.quoteMessage.author.discriminator = replyMsg.author.discriminator;
       bridgeMessage.quoteMessage.author.avatar = replyMsg.author.avatarURL({format: 'png'});
@@ -246,7 +246,7 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
   }
   if (bridgeMessage.quoteMessage?.from?.qqMessageID) {
     quote = bridgeMessage.quoteMessage.from.qqMessageID;
-  } else {
+  } else if (bridgeMessage.quoteMessage) {
     let replyMessageContent: string = '';
     for (const msg of bridgeMessage.quoteMessage.chain) {
       switch (msg.type) {
@@ -544,6 +544,7 @@ export function parserQQMessage(message: string): Array<At | Plain> {
   }
   return ast as any;
 }
+
 /**
  * 解析 Discord 文本消息
  */
@@ -578,6 +579,7 @@ export async function parserDCMessage(message: string, bridgeMessage: BridgeMess
   }
   return result;
 }
+
 /**
  * 解析 开黑啦 文本消息
  */
