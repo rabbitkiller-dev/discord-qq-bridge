@@ -13,7 +13,8 @@ export interface BridgeConfig {
   qqGroup: number;
   kaiheila: {
     channelID: string,
-  }
+  };
+  enable: boolean;
 }
 export interface Config {
   qqBot: number,
@@ -63,6 +64,8 @@ export interface DiscordAllGuildAndChannelsInfo {
     name: string
     channels: Array<{ id: string, name: string }>
   }>;
+  hasManageWebhooks: boolean;
+  webhooks: Array<{ id: string, name: string, token: string }>
 }
 export interface KHLAllInfo {
   guild: Array<{

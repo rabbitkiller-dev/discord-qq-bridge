@@ -100,20 +100,30 @@ export class BridgeController {
 
   @Get('discordAllGuildAndChannelsInfo')
   async getDiscordAllGuildAndChannelsInfo(@Res() res: Response) {
-    const result: DiscordAllGuildAndChannelsInfo = {
+    const result: DiscordAllInfo = {
       guild: [],
+      webhooks: [],
+      hasManageWebhooks: false
     }
-    BotService.discord.guilds.cache.forEach((value, key, map) => {
+    const guildList = BotService.discord.guilds.cache.array();
+    for (const guild of guildList) {
+      result.hasManageWebhooks = guild.me.hasPermission('MANAGE_WEBHOOKS')
+      if (result.hasManageWebhooks) {
+        const webhooks = await guildList[0].fetchWebhooks();
+        webhooks.forEach((webhook) => {
+          result.webhooks.push({id: webhook.id, name: webhook.name, token: webhook.token});
+        })
+      }
       const channels = [];
-      BotService.discord.guilds.cache.get(key).channels.cache.forEach((value, key, map) => {
-        if(value.type === 'text'){
+      BotService.discord.guilds.cache.get(guild.id).channels.cache.forEach((value, key, map) => {
+        if (value.type === 'text') {
           channels.push({id: key, name: value.name})
         }
       })
       result.guild.push({
-        id: key, name: value.name, channels
+        id: guild.id, name: guild.name, channels
       })
-    })
+    }
     res.status(200).json({data: result});
   }
 
@@ -123,11 +133,11 @@ export class BridgeController {
       guild: [],
     }
     const guildList = await BotService.kaiheila.API.guild.list();
-    for(let guild of guildList.items){
+    for (let guild of guildList.items) {
       const channelList = await await BotService.kaiheila.API.channel.list(guild.id);
       const channels = [];
       channelList.items.forEach(channel => {
-        if(channel.type !== 1 || channel.isCategory){
+        if (channel.type !== 1 || channel.isCategory) {
           return;
         }
         channels.push({id: channel.id, name: channel.name});
@@ -140,13 +150,14 @@ export class BridgeController {
     }
     res.status(200).json({data: result});
   }
+
   @Get('qqAllInfo')
   async getQQAllInfo(@Res() res: Response) {
     const result: QQAllInfo = {
       group: [],
     }
     const groupList = await BotService.qqBot.mirai.api.groupList();
-    groupList.forEach((group)=>{
+    groupList.forEach((group) => {
       result.group.push({
         id: group.id,
         name: group.name,
@@ -157,9 +168,11 @@ export class BridgeController {
   }
 
 }
+
 interface QQAllInfo {
-  group: Array<{id: number, name: string}>
+  group: Array<{ id: number, name: string }>
 }
+
 interface KHLAllInfo {
   guild: Array<{
     id: string,
@@ -167,10 +180,13 @@ interface KHLAllInfo {
     channels: Array<{ id: string, name: string }>
   }>;
 }
-interface DiscordAllGuildAndChannelsInfo {
+
+interface DiscordAllInfo {
   guild: Array<{
     id: string,
     name: string
     channels: Array<{ id: string, name: string }>
   }>;
+  hasManageWebhooks: boolean;
+  webhooks: Array<{ id: string, name: string, token: string }>
 }

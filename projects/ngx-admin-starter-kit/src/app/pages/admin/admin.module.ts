@@ -7,7 +7,8 @@ import {
   NbCardModule,
   NbIconModule,
   NbInputModule,
-  NbSelectModule
+  NbSelectModule,
+  NbToggleModule,
 } from '@nebular/theme';
 import { Ng2SmartTableModule } from 'ng2-smart-table';
 
@@ -36,6 +37,7 @@ import { TableEditorSelectComponent } from './table-editor-select.component';
     NbSelectModule,
     NbButtonModule,
     NbAlertModule,
+    NbToggleModule,
   ],
   declarations: [
     AdminComponent,

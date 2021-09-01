@@ -3,55 +3,76 @@
     <nb-card>
       <nb-card-body>
         <div class="font-row">
-<!--          <div class="header">-->
-<!--            <div class="name bold">Discord配置</div>-->
-<!--          </div>-->
+          <!--          <div class="header">-->
+          <!--            <div class="name bold">Discord配置</div>-->
+          <!--          </div>-->
 
           <div class="form-group">
             <label for="DiscordChannel" class="label">Discord频道</label>
             <nb-select selected="1" style="width: 100%;max-width: unset;" id="DiscordChannel"
-                       placeholder="Discord Channel" [(ngModel)]="bridge.discord.channelID">
+                       [(ngModel)]="bridge.discord.channelID">
               <nb-option-group [title]="option.name" *ngFor="let option of discordInfo.guild">
                 <nb-option [value]="item.id" *ngFor="let item of option.channels">{{item.name}}</nb-option>
               </nb-option-group>
             </nb-select>
           </div>
-          <div class="form-group">
-            <label for="DiscordChannel" class="label">Discord频道机器人ID</label>
-            <input type="text" nbInput fullWidth id="DiscordBotID" placeholder="Discord BotID"
-                   [(ngModel)]="bridge.discord.id">
-          </div>
-          <div class="form-group">
-            <label for="DiscordChannel" class="label">Discord频道机器人Token</label>
-            <input type="text" nbInput fullWidth id="DiscordBotToken" placeholder="Discord BotToken"
-                   [(ngModel)]="bridge.discord.token">
-          </div>
+
+          <ng-container *ngIf="discordInfo.hasManageWebhooks">
+            <div class="form-group">
+              <label for="DiscordChannel" class="label">Discord频道Webhook</label>
+              <nb-select selected="1" style="width: 100%;max-width: unset;" id="DiscordChannelWebhook"
+                         [(ngModel)]="bridge.discord.id" (ngModelChange)="selectWebhookChange(bridge)">
+                <nb-option [value]="item.id" *ngFor="let item of discordInfo.webhooks">{{item.name}}</nb-option>
+              </nb-select>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="!discordInfo.hasManageWebhooks">
+            <div class="form-group">
+              <label for="DiscordChannel" class="label">Discord频道机器人ID</label>
+              <input type="text" nbInput fullWidth id="DiscordBotID" [(ngModel)]="bridge.discord.id">
+            </div>
+            <div class="form-group">
+              <label for="DiscordChannel" class="label">Discord频道机器人Token</label>
+              <input type="text" nbInput fullWidth id="DiscordBotToken" [(ngModel)]="bridge.discord.token">
+            </div>
+          </ng-container>
+
         </div>
         <div class="font-row">
-<!--          <div class="header">-->
-<!--            <div class="name bold">QQ群配置</div>-->
-<!--          </div>-->
+          <!--          <div class="header">-->
+          <!--            <div class="name bold">QQ群配置</div>-->
+          <!--          </div>-->
 
           <div class="form-group">
             <label for="QQGroup" class="label">QQ群号</label>
-            <nb-select selected="1" style="width: 100%;max-width: unset;" id="QQGroup"
-                       placeholder="QQGroup" [(ngModel)]="bridge.qqGroup">
+            <nb-select selected="1" style="width: 100%;max-width: unset;" id="QQGroup" [(ngModel)]="bridge.qqGroup">
               <nb-option [value]="option.id" *ngFor="let option of qqAllInfo.group">{{option.name}}</nb-option>
             </nb-select>
           </div>
         </div>
         <div class="font-row">
-<!--          <div class="header">-->
-<!--            <div class="name bold">开黑啦配置</div>-->
-<!--          </div>-->
+          <!--          <div class="header">-->
+          <!--            <div class="name bold">开黑啦配置</div>-->
+          <!--          </div>-->
           <div class="form-group">
             <label for="KHLChannel" class="label">开黑啦频道</label>
             <nb-select selected="1" style="width: 100%;max-width: unset;" id="KHLChannel"
-                       placeholder="KHL Channel" [(ngModel)]="bridge.kaiheila.channelID">
+                       [(ngModel)]="bridge.kaiheila.channelID">
               <nb-option-group [title]="option.name" *ngFor="let option of khlAllInfo.guild">
                 <nb-option [value]="item.id" *ngFor="let item of option.channels">{{item.name}}</nb-option>
               </nb-option-group>
             </nb-select>
+          </div>
+        </div>
+        <div class="font-row">
+          <!--          <div class="header">-->
+          <!--            <div class="name bold">开黑啦配置</div>-->
+          <!--          </div>-->
+          <div class="form-group">
+            <label for="KHLChannel" class="label">启用</label>
+            <div>
+              <nb-toggle [(ngModel)]="bridge.enable"></nb-toggle>
+            </div>
           </div>
         </div>
       </nb-card-body>
@@ -59,6 +80,9 @@
   </div>
 
 </div>
-<button nbButton style="margin-right: 10px" (click)="config.bridges.push({discord: {channelID: '', id: '', token: ''}, qqGroup: undefined, kaiheila: {channelID: ''}})">添加配置</button>
+<button nbButton style="margin-right: 10px"
+        (click)="config.bridges.push({discord: {channelID: '', id: '', token: ''}, qqGroup: undefined, kaiheila: {channelID: ''}, enable: true})">
+  添加配置
+</button>
 <button type="submit" nbButton status="primary" (click)="onButtonClickSave()">保存</button>
 

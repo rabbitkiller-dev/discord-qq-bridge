@@ -17,7 +17,7 @@ export default async function bridgeQq() {
   BotService.qqBot.mirai.on('GroupMessage', async (qqMsg: MessageType.GroupMessage) => {
     // 查询这个频道是否需要通知到群
     const bridge: BridgeConfig = config.bridges.find(b => b.qqGroup === qqMsg.sender.group.id);
-    if (!bridge) {
+    if (!bridge || bridge.enable === false) {
       return;
     }
     const bridgeMessage = await qqMessageToBridgeMessage(qqMsg, bridge);

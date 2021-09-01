@@ -27,6 +27,7 @@ class _ElAndDiscordService {
       // 需要Intents允许一些行为(要获取频道的用户必须需要)
       const intents = new Intents([
         Intents.NON_PRIVILEGED, // include all non-privileged intents, would be better to specify which ones you actually need
+        "GUILD_WEBHOOKS",
         "GUILD_MEMBERS", // lets you request guild members (i.e. fixes the issue)
       ]);
       const discord = this.discord = new Client({ws: {intents}});

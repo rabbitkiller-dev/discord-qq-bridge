@@ -39,6 +39,7 @@ import {
     }),
     CoreModule.forRoot(),
     ThemeModule.forRoot(),
+    NbToastrModule.forRoot(),
   ],
   bootstrap: [AppComponent],
 })

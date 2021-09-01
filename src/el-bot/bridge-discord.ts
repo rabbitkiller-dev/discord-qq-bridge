@@ -16,7 +16,7 @@ export default async function bridgeDiscord() {
     }
     // 查询这个频道是否需要通知到群
     const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
-    if (!bridge) {
+    if (!bridge || bridge.enable === false) {
       return;
     }
     const bridgeMessage = await discordMessageToBridgeMessage(msg);

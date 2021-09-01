@@ -1,6 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AdminService, Config, DiscordAllGuildAndChannelsInfo, KHLAllInfo, QQAllInfo } from './admin.service';
+import {
+  AdminService,
+  BridgeConfig,
+  Config,
+  DiscordAllGuildAndChannelsInfo,
+  KHLAllInfo,
+  QQAllInfo
+} from './admin.service';
 import { TableEditorNoneComponent } from './table-editor-none.component';
 import { SelectRenderComponent } from './select-render.component';
 import { TableSelectComponent } from './user-select.component';
@@ -9,6 +16,7 @@ import { LocalDataSource } from 'ng2-smart-table';
 import { zip } from 'rxjs';
 import { TableEditorInputComponent } from './table-editor-input.component';
 import { TableEditorSelectComponent } from './table-editor-select.component';
+import { NbToastrService } from '@nebular/theme';
 
 @Component({
   selector: 'app-bridge-config',
@@ -64,18 +72,19 @@ export class BridgeConfigComponent implements OnInit {
   khlAllInfo: KHLAllInfo;
   qqAllInfo: QQAllInfo;
 
-  constructor(public http: HttpClient, public adminService: AdminService) {
+  constructor(public http: HttpClient, public adminService: AdminService, private toastrService: NbToastrService) {
     zip(this.adminService.getConfig(), this.adminService.discordAllGuildAndChannelsInfo(), this.adminService.khlAllInfo(), this.adminService.qqAllInfo())
       .subscribe(([config, discordInfo, khlAllInfo, qqAllInfo]) => {
         this.config = config;
         this.discordInfo = discordInfo;
         this.khlAllInfo = khlAllInfo;
         this.qqAllInfo = qqAllInfo;
+        this.config.bridges.forEach((bridge) => {
+          if (bridge.enable === undefined) {
+            bridge.enable = true;
+          }
+        })
       })
-    // this.adminService.getConfig().subscribe((config) => {
-    //   this.config = config;
-    //   this.source.load(this.config.autoApproveQQGroup);
-    // });
   }
 
   ngOnInit(): void {
@@ -84,6 +93,12 @@ export class BridgeConfigComponent implements OnInit {
   async onButtonClickSave(): Promise<void> {
     this.adminService.setConfig(this.config).subscribe((config) => {
       this.config = config;
+      this.toastrService.success('保存成功');
     })
+  }
+
+  selectWebhookChange(bridge: BridgeConfig) {
+    const webhook = this.discordInfo.webhooks.find(webhook => webhook.id === bridge.discord.id);
+    bridge.discord.token = webhook.token;
   }
 }

@@ -21,7 +21,7 @@ export default async function bridgeKai() {
     }
     // 查询这个频道是否需要通知到群
     const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === allMessage.data.channelId);
-    if (!bridge) {
+    if (!bridge || bridge.enable === false) {
       return;
     }
     const bridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);

@@ -7,5 +7,6 @@ export interface BridgeConfig {
     qqGroup: number;
     kaiheila: {
         channelID: string,
-    }
+    },
+    enable: boolean;
 }
