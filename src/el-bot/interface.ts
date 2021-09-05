@@ -8,6 +8,13 @@ export interface KaiheilaAllMessage {
     authorId: string,
     channelId: string
     guildId: string;
+    author: KaiheilaBotRoot.UserInGuild
+    quote: {
+      type: KaiheilaBotRoot.MessageType;
+      msgId: string;
+      content: string;
+      author: KaiheilaBotRoot.UserInGuild
+    }
   }
 }
 
