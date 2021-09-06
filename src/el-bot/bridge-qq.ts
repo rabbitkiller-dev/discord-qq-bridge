@@ -8,7 +8,7 @@ import { Message as DiscordMessage, WebhookMessageOptions } from 'discord.js';
 import { Message as MiraiMessage, MessageType } from 'mirai-ts';
 import { KaiheilaAllMessage } from './interface';
 import {
-  bridgeSendDiscord, bridgeSendKaiheila,
+  bridgeSendDiscord, bridgeSendKaiheila, bridgeSendQQ,
   discordMessageToBridgeMessage, qqMessageToBridgeMessage, saveBridgeMessage,
 } from './message-util';
 
@@ -21,12 +21,19 @@ export default async function bridgeQq() {
       return;
     }
     const bridgeMessage = await qqMessageToBridgeMessage(qqMsg, bridge);
-    await bridgeSendDiscord(bridgeMessage);
-    await bridgeSendKaiheila(bridgeMessage);
+
+    try {
+      await bridgeSendDiscord(bridgeMessage);
+    } catch (err) {
+      log.error('[QQ]->[DC] 失败!(不应该出现的错误)');
+      log.error(err);
+    }
+    try {
+      await bridgeSendKaiheila(bridgeMessage);
+    } catch (err) {
+      log.error(err);
+      log.error('[QQ]->[KHL] 失败!(不应该出现的错误)');
+    }
     await saveBridgeMessage(bridgeMessage);
-    // log.error('[Discord]->[Kaiheila] 失败!(不应该出现的错误)');
-    // log.error('[Discord]->[QQ] 失败!(不应该出现的错误)');
-    // log.error('[Kaiheila]->[Discord] 失败!(不应该出现的错误)');
-    // log.error('[Kaiheila]->[QQ] 失败!(不应该出现的错误)');
   });
 }

@@ -16,7 +16,7 @@ import {
 
 export default async function bridgeKai() {
   BotService.kaiheila.on('allMessages', async (allMessage: KaiheilaAllMessage) => {
-    if(allMessage.data.authorId === '140691480'){
+    if (allMessage.data.authorId === '140691480') {
       return;
     }
     // 查询这个频道是否需要通知到群
@@ -26,8 +26,18 @@ export default async function bridgeKai() {
     }
     const bridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);
     bridgeMessage.bridge = bridge;
-    await bridgeSendDiscord(bridgeMessage);
-    await bridgeSendQQ(bridgeMessage);
+    try {
+      await bridgeSendDiscord(bridgeMessage);
+    } catch (err) {
+      log.error(err);
+      log.error('[KHL]->[DC] 失败!(不应该出现的错误)');
+    }
+    try {
+      await bridgeSendQQ(bridgeMessage);
+    } catch (err) {
+      log.error(err);
+      log.error('[KHL]->[QQ] 失败!(不应该出现的错误)');
+    }
     await saveBridgeMessage(bridgeMessage);
   });
 }

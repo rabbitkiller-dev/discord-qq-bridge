@@ -2,10 +2,11 @@ import { BotService } from './bot.service';
 import { BridgeConfig } from '../interface';
 import config from '../config';
 import {
-  BridgeMessage, bridgeSendKaiheila,
+  BridgeMessage, bridgeSendDiscord, bridgeSendKaiheila,
   bridgeSendQQ,
   discordMessageToBridgeMessage, saveBridgeMessage,
 } from './message-util';
+import * as log from '../utils/log5';
 
 
 export default async function bridgeDiscord() {
@@ -21,8 +22,18 @@ export default async function bridgeDiscord() {
     }
     const bridgeMessage = await discordMessageToBridgeMessage(msg);
     bridgeMessage.bridge = bridge;
-    await bridgeSendKaiheila(bridgeMessage);
-    await bridgeSendQQ(bridgeMessage);
+    try {
+      await bridgeSendKaiheila(bridgeMessage);
+    } catch (err) {
+      log.error('[DC]->[KHL] 失败!(不应该出现的错误)');
+      log.error(err);
+    }
+    try {
+      await bridgeSendQQ(bridgeMessage);
+    } catch (err) {
+      log.error(err);
+      log.error('[DC]->[QQ] 失败!(不应该出现的错误)');
+    }
     await saveBridgeMessage(bridgeMessage);
   });
 }
