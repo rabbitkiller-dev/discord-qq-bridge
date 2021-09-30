@@ -16,7 +16,7 @@ import {
 
 export default async function bridgeKai() {
   BotService.kaiheila.on('allMessages', async (allMessage: KaiheilaAllMessage) => {
-    if (allMessage.data.authorId === '140691480') {
+    if (allMessage.data.authorId === config.kaiheilaBot) {
       return;
     }
     // 查询这个频道是否需要通知到群

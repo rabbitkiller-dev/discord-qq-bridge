@@ -130,7 +130,8 @@ export async function generateQQMsgContentAvatar(url: string, useCache?: boolean
   let stream = fs.createWriteStream(path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
   stream.write(canvas.toBuffer());
   stream.close();
-  let relativePath = path.join('../../../../', imageDiscordAvatarCacheDir.replace(cacheDir, 'cache'), path.basename(filePath));
+  let relativePath = path.join('../', imageDiscordAvatarCacheDir.replace(cacheDir, 'cache'), path.basename(filePath));
+  console.log('relativePath2: ', relativePath);
   return MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/'));
 }
 

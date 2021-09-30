@@ -13,6 +13,7 @@ export interface Config {
   },
   discordBot: string;
   discordBotToken: string;
+  kaiheilaBot: string;
   kaiheilaBotToken: string;
   bridges: BridgeConfig[];
   autoApproveQQGroup: Array<{qqGroup: number, reg: string}>

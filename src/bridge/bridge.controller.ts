@@ -159,7 +159,8 @@ export class BridgeController {
     const result: QQAllInfo = {
       group: [],
     }
-    const groupList = await BotService.qqBot.mirai.api.groupList();
+    const groupListResult = await BotService.qqBot.mirai.api.groupList();
+    const groupList = groupListResult.data;
     groupList.forEach((group) => {
       result.group.push({
         id: group.id,

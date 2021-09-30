@@ -50,7 +50,7 @@
     "dayjs": "^1.9.6",
     "discord-markdown": "^2.5.0",
     "discord.js": "^12.5.3",
-    "el-bot": "^0.8.0-beta.5",
+    "el-bot": "^0.9.0-beta.3",
     "fast-xml-parser": "^3.17.6",
     "file-type": "^16.0.1",
     "got": "^11.8.1",

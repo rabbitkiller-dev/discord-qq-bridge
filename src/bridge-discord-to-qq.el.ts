@@ -85,7 +85,7 @@
 //               break;
 //             case 'image':
 //               const filePath = await downloadDiscordAttachment({url: source.data.file});
-//               const relativePath = path.relative(path.join(__dirname, '../mcl/data/net.mamoe.mirai-api-http/images'), filePath);
+//               const relativePath = path.relative(path.join(__dirname, '../mcl/data/MiraiApiHttp/images'), filePath);
 //               msgChain.push(MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/')))
 //               break;
 //             default:
@@ -98,7 +98,7 @@
 //       const attachments = Array.from(msg.attachments.values());
 //       for (let attachment of attachments) {
 //         const filePath = await downloadDiscordAttachment({url: attachment.url});
-//         const relativePath = path.relative(path.join(__dirname, '../mcl/data/net.mamoe.mirai-api-http/images'), filePath);
+//         const relativePath = path.relative(path.join(__dirname, '../mcl/data/MiraiApiHttp/images'), filePath);
 //         msgChain.push(MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/')))
 //       }
 //     }
@@ -168,7 +168,7 @@
 //   let stream = fs.createWriteStream(path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
 //   stream.write(canvas.toBuffer());
 //   stream.close();
-//   let relativePath = path.relative(path.join(__dirname, '../mcl/data/net.mamoe.mirai-api-http/images'), path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
+//   let relativePath = path.relative(path.join(__dirname, '../mcl/data/MiraiApiHttp/images'), path.join(imageDiscordAvatarCacheDir, path.basename(filePath)));
 //   return MiraiMessage.Image(null, null, relativePath.replace(/\\/g, '/'))
 // }
 //
