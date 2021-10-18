@@ -27,12 +27,12 @@ cacheSize: 4096
 adapterSettings:
   ## 详情看 http adapter 使用说明 配置
   http:
-    host: localhost
+    host: 0.0.0.0
     port: 8080
     cors: [*]
 
   ## 详情看 websocket adapter 使用说明 配置
   ws:
-    host: localhost
+    host: 0.0.0.0
     port: 8080
     reservedSyncId: -1
