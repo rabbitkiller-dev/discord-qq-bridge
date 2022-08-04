@@ -2,7 +2,7 @@
   "name": "discord-qq-bridge",
   "version": "3.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
