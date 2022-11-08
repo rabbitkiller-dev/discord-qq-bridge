@@ -1,1 +1,1 @@
-type DiscordMarkdownType = 'discordEveryone' | 'br';
+type DiscordMarkdownType = "discordEveryone" | "br";

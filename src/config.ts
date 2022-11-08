@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { BridgeConfig } from './interface';
+import * as fs from "fs";
+import * as path from "path";
+import { BridgeConfig } from "./interface";
 
 export interface Config {
   myDomainName: string,
@@ -20,7 +20,7 @@ export interface Config {
   proxy: string;
 }
 const config = {} as Config;
-const json = JSON.parse(fs.readFileSync(path.join(__dirname, '../config.json')).toString());
+const json = JSON.parse(fs.readFileSync(path.join(__dirname, "../config.json")).toString());
 Object.assign(config, json);
 
 export default config;

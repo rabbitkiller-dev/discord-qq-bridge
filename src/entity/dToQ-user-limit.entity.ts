@@ -2,7 +2,7 @@ import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn} from "typeorm"
 
 @Entity()
 export class DToQUserLimitEntity {
-    @PrimaryGeneratedColumn('increment')
+    @PrimaryGeneratedColumn("increment")
     id: number;
 
     @Column()

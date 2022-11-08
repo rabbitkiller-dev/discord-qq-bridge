@@ -1,4 +1,4 @@
-import * as KaiheilaBotRoot from 'kaiheila-bot-root';
+import * as KaiheilaBotRoot from "kaiheila-bot-root";
 
 export interface KaiheilaAllMessage {
   type: string,
@@ -48,7 +48,7 @@ export interface Plain extends BaseSingleMessage {
  */
 export interface At extends BaseSingleMessage {
   type: "At";
-  source: 'QQ' | 'KHL' | 'DC';
+  source: "QQ" | "KHL" | "DC";
   username: string,
   qqNumber?: number,
   discriminator?: string,
@@ -63,7 +63,7 @@ export interface AtAll extends BaseSingleMessage {
 }
 
 export interface Image extends BaseSingleMessage {
-  type: 'Image';
+  type: "Image";
   url: string; // 图片路径
   local?: string; // 图片本地路径
   cache?: string; // 图片缓存路径(bridge.rabbitkiller.dev的访问路径)

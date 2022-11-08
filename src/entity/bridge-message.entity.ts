@@ -1,9 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
-import { SingleMessage } from '../el-bot/interface';
+import { SingleMessage } from "../el-bot/interface";
 
 @Entity()
 export class BridgeMessageEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: number;
 
   @Column({nullable: true})
@@ -16,14 +16,14 @@ export class BridgeMessageEntity {
   khlMessageID: string;
 
   @Column()
-  from: 'QQ' | 'KHL' | 'DC';
+  from: "QQ" | "KHL" | "DC";
 
-  // @Column({type: 'json'})
-  // dcMessageContent: SingleMessage[] = [];
-  //
-  // @Column({type: 'json'})
-  // qqMessageContent: SingleMessage[] = [];
-  //
-  // @Column({type: 'json'})
-  // khlMessageContent: SingleMessage[] = [];
+	// @Column({type: 'json'})
+	// dcMessageContent: SingleMessage[] = [];
+	//
+	// @Column({type: 'json'})
+	// qqMessageContent: SingleMessage[] = [];
+	//
+	// @Column({type: 'json'})
+	// khlMessageContent: SingleMessage[] = [];
 }
