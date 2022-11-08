@@ -44,7 +44,7 @@ export async function download(url: string, useCache = true): Promise<string> {
 		return path.join(assetsCacheDir, isExists);
 	}
 	const buffer = await got(url).buffer();
-	const fileType = await FileType.fromBuffer(buffer);
+	const fileType = await FileType.fileTypeFromBuffer(buffer);
 	const filename = `${md5(url)}.${fileType.ext}`;
 	const localPath = path.join(assetsCacheDir, filename);
 	fs.writeFileSync(localPath, buffer);
@@ -98,11 +98,11 @@ export async function downloadQQImage(params: { url: string; cache?: boolean }):
 		return path.join(imageQQEmojiCacheDir, isExists);
 	}
 	const stream = got.stream(params.url);
-	const fileType = await FileType.fromStream(stream);
+	const fileType = await FileType.fileTypeFromStream(stream);
 	const filename = `${md5(params.url)}.${fileType.ext}`;
 	const localPath = path.join(imageQQEmojiCacheDir, filename);
 	const writeStream = fs.createWriteStream(localPath);
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve /* , reject */) => {
 		got
 			.stream(params.url)
 			.pipe(writeStream)

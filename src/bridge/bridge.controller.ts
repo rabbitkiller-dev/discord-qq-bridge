@@ -5,21 +5,21 @@ import {
 	Get,
 	Param,
 	Post,
-	Redirect,
-	Req,
-	Request,
+	// Redirect,
+	// Req,
+	// Request,
 	Res,
 } from "@nestjs/common";
 import { Response } from "express";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DToQUserLimitEntity } from "../entity/dToQ-user-limit.entity";
 import { Repository } from "typeorm";
-import * as shortid from "shortid";
+// import * as shortid from "shortid";
 import { BotService } from "../el-bot/bot.service";
 import config, { Config } from "../config";
 import * as fs from "fs";
 import * as path from "path";
-import { Collection, Snowflake, Webhook } from "discord.js";
+import { ChannelType, Collection, Snowflake, Webhook } from "discord.js";
 
 @Controller("/api/bridge")
 export class BridgeController {
@@ -56,7 +56,7 @@ export class BridgeController {
 	@Get("guilds")
 	getAllGuilds(@Res() res: Response) {
 		const channels: Array<{ id: string; name: string }> = [];
-		BotService.discord.guilds.cache.forEach((value, key, map) => {
+		BotService.discord.guilds.cache.forEach((value, key /*, map*/) => {
 			channels.push({ id: key, name: value.name });
 		});
 		res.status(200).json({ data: channels });
@@ -68,9 +68,11 @@ export class BridgeController {
 	@Get("guilds/:guildID/channels")
 	async getAllChannels(@Param("guildID") guildID: string, @Res() res: Response) {
 		const channels: Array<{ id: string; name: string }> = [];
-		BotService.discord.guilds.cache.get(guildID).channels.cache.forEach((value, key, map) => {
-			channels.push({ id: key, name: value.name });
-		});
+		BotService.discord.guilds.cache
+			.get(guildID)
+			.channels.cache.forEach((value, key /* , map */) => {
+				channels.push({ id: key, name: value.name });
+			});
 		res.status(200).json({ data: channels });
 	}
 
@@ -80,8 +82,8 @@ export class BridgeController {
 	@Get("guilds/:guildID/users")
 	async getAllUsers(@Param("guildID") guildID: string, @Res() res: Response) {
 		const users: Array<{ id: string; username: string; discriminator: string; bot: boolean }> = [];
-		const fetchedMembers = await BotService.discord.guilds.cache.get(guildID).members.fetch();
-		BotService.discord.guilds.cache.get(guildID).members.cache.forEach((value, key, map) => {
+		// const fetchedMembers = await BotService.discord.guilds.cache.get(guildID).members.fetch();
+		BotService.discord.guilds.cache.get(guildID).members.cache.forEach((value, key /*, map */) => {
 			users.push({
 				id: key,
 				username: value.user.username,
@@ -97,7 +99,7 @@ export class BridgeController {
 	 */
 	@Get("guilds/:guildID/DToQUserLimit")
 	async getAllDToQUserLimit(@Param("guildID") guildID: string, @Res() res: Response) {
-		const results = await this.dToQUserLimitRepository.find({ guild: guildID });
+		const results = await this.dToQUserLimitRepository.find({ where: { guild: guildID } });
 		res.status(200).json({ data: results });
 	}
 
@@ -124,25 +126,28 @@ export class BridgeController {
 		const result: DiscordAllInfo = {
 			guild: [],
 		};
-		const guildList = BotService.discord.guilds.cache.array();
+		const guildList = BotService.discord.guilds.cache;
 		for (const guild of guildList) {
-			const hasManageWebhooks = guild.me.hasPermission("MANAGE_WEBHOOKS");
+			// guild.me.hasPermission("MANAGE_WEBHOOKS");
+			const hasManageWebhooks = guild[1].members.me.permissions.has("ManageWebhooks");
 			let webhooks: Collection<Snowflake, Webhook> = new Collection();
 			if (hasManageWebhooks) {
-				webhooks = await guild.fetchWebhooks();
+				webhooks = await guild[1].fetchWebhooks();
 			}
 			const channels = [];
-			BotService.discord.guilds.cache.get(guild.id).channels.cache.forEach((value, key, map) => {
-				if (value.type === "text") {
-					channels.push({ id: key, name: value.name });
-				}
-			});
+			BotService.discord.guilds.cache
+				.get(guild[1].id)
+				.channels.cache.forEach((value, key /* , map */) => {
+					if (value.type === ChannelType.GuildText) {
+						channels.push({ id: key, name: value.name });
+					}
+				});
 			result.guild.push({
-				id: guild.id,
-				name: guild.name,
+				id: guild[1].id,
+				name: guild[1].name,
 				channels,
 				hasManageWebhooks,
-				webhooks: webhooks.array().map((webhook) => {
+				webhooks: webhooks.map((webhook) => {
 					return { id: webhook.id, name: webhook.name, token: webhook.token };
 				}),
 			});

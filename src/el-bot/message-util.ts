@@ -1,10 +1,9 @@
 import {
+	AttachmentBuilder,
 	Guild,
 	Message as DiscordMessage,
-	MessageAttachment,
-	MessageEmbed,
 	Webhook as DiscordWebhook,
-	WebhookMessageOptions,
+	WebhookCreateMessageOptions,
 } from "discord.js";
 import { Message as MiraiMessage, Config as MiraiConfig, MessageType } from "mirai-ts";
 import { At, AtAll, Image, KaiheilaAllMessage, Plain, SingleMessage } from "./interface";
@@ -14,10 +13,10 @@ import { BotService } from "./bot.service";
 import { MessageUtil } from "./message";
 import { BridgeConfig } from "../interface";
 import { bridgeRule, generateQQMsgContentAvatar, remoteImageToLocal } from "./utils";
-import { markdownEngine, rules } from "discord-markdown";
+import { markdownEngine /* , rules */ } from "discord-markdown";
 import { BridgeMessageEntity } from "../entity/bridge-message.entity";
 import { download } from "../utils/download-file";
-import { KhlInterface } from "./khl-interface";
+import * as KhlInterface /* { KhlInterface } */ from "./khl-interface";
 import * as path from "path";
 import * as log from "../utils/log5";
 
@@ -28,10 +27,12 @@ export class BridgeMessage {
 		qqNumber?: number;
 		discriminator?: string;
 	} = {
+		/* eslint-disable */
 		qqNumber: undefined,
 		avatar: undefined,
 		username: "NoneUserName",
 	};
+	/* eslint-enable */
 	quoteMessage?: BridgeMessage;
 	chain: SingleMessage[] = [];
 	bridge: BridgeConfig;
@@ -39,7 +40,7 @@ export class BridgeMessage {
 	origin: {
 		khlMessage: KaiheilaAllMessage;
 		dcMessage: DiscordMessage;
-	} = {} as any;
+	} = {} as any; // as any
 	from: BridgeMessageEntity = new BridgeMessageEntity();
 
 	constructor(public source: "QQ" | "KHL" | "DC") {
@@ -61,17 +62,17 @@ export async function kaiheilaMessageToBridgeMessage(
 	bridgeMessage.author.discriminator = allMessage.data.author.identifyNum;
 	bridgeMessage.author.avatar = allMessage.data.author.avatar;
 	if (allMessage.data.type === KaiheilaBotRoot.MessageType.text) {
-		const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any;
+		const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any; // as any
 		bridgeMessage.chain.push(MessageUtil.Plain(kaiMsg.content));
 	} else if (allMessage.data.type === KaiheilaBotRoot.MessageType.image) {
-		const kaiMsg: KaiheilaBotRoot.ImageMessage = allMessage.data as any;
+		const kaiMsg: KaiheilaBotRoot.ImageMessage = allMessage.data as any; // as any
 		bridgeMessage.chain.push(MessageUtil.Image(kaiMsg.attachment.url));
 	}
 	if (allMessage.data.quote) {
 		const quoteMessage = allMessage.data.quote;
 
 		const messageRepo = DatabaseService.connection.getRepository(BridgeMessageEntity);
-		const refMsg = await messageRepo.findOne({ khlMessageID: quoteMessage.msgId });
+		const refMsg = await messageRepo.findOne({ where: { khlMessageID: quoteMessage.msgId } });
 		bridgeMessage.quoteMessage = new BridgeMessage("KHL");
 		// 尝试查找discord对应的qq消息id
 		if (refMsg) {
@@ -81,10 +82,10 @@ export async function kaiheilaMessageToBridgeMessage(
 		bridgeMessage.quoteMessage.author.discriminator = quoteMessage.author.identifyNum;
 		bridgeMessage.quoteMessage.author.avatar = quoteMessage.author.avatar;
 		if (allMessage.data.type === KaiheilaBotRoot.MessageType.text) {
-			const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any;
+			const kaiMsg: KaiheilaBotRoot.TextMessage = allMessage.data as any; // as any
 			bridgeMessage.quoteMessage.chain.push(MessageUtil.Plain(kaiMsg.content));
 		} else if (allMessage.data.type === KaiheilaBotRoot.MessageType.image) {
-			const kaiMsg: KaiheilaBotRoot.ImageMessage = allMessage.data as any;
+			const kaiMsg: KaiheilaBotRoot.ImageMessage = allMessage.data as any; // as any
 			bridgeMessage.quoteMessage.chain.push(MessageUtil.Image(kaiMsg.attachment.url));
 		}
 	}
@@ -99,17 +100,20 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
 	bridgeMessage.origin.dcMessage = msg;
 	bridgeMessage.from.dcMessageID = msg.id;
 	// 处理回复
-	if (msg.reference && msg.reference.messageID) {
+	if (msg.reference && msg.reference.messageId) {
 		const messageRepo = DatabaseService.connection.getRepository(BridgeMessageEntity);
-		const refMsg = await messageRepo.findOne({ dcMessageID: msg.reference.messageID });
+		const refMsg = await messageRepo.findOne({ where: { dcMessageID: msg.reference.messageId } });
 		bridgeMessage.quoteMessage = new BridgeMessage("DC");
 		// 尝试查找discord对应的qq消息id
 		if (refMsg) {
 			bridgeMessage.quoteMessage.from = refMsg;
 		}
 		// 找不到就证明是旧的消息或者某些原因找不到, 那就纯文本当回复吧
-		const channel: any = await BotService.discord.channels.fetch(msg.channel.id);
-		const replyMsg = await channel.messages.fetch(msg.reference.messageID);
+		// any
+		const channel: any = await BotService.discord.channels.fetch(
+			msg.channel.id
+		);
+		const replyMsg = await channel.messages.fetch(msg.reference.messageId);
 		if (replyMsg.author.discriminator === "0000") {
 			const ast = markdownEngine.parserFor({
 				atQQ: bridgeRule.atQQ,
@@ -117,11 +121,11 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
 				Plain: bridgeRule.Plain,
 			})(`@${replyMsg.author.username}`);
 			console.log(ast);
-			bridgeMessage.quoteMessage.author = { ...ast[0] } as any;
+			bridgeMessage.quoteMessage.author = { ...ast[0] } as any; // as any
 		} else {
 			bridgeMessage.quoteMessage.author.username = replyMsg.author.username;
 			bridgeMessage.quoteMessage.author.discriminator = replyMsg.author.discriminator;
-			bridgeMessage.quoteMessage.author.avatar = replyMsg.author.avatarURL({ format: "png" });
+			bridgeMessage.quoteMessage.author.avatar = replyMsg.author.avatarURL({ extension: "png" });
 		}
 		if (replyMsg.content) {
 			bridgeMessage.quoteMessage.chain.push(
@@ -131,7 +135,7 @@ export async function discordMessageToBridgeMessage(msg: DiscordMessage): Promis
 	}
 	// 头像
 	if (msg.author.avatar) {
-		bridgeMessage.author.avatar = msg.author.avatarURL({ format: "png" });
+		bridgeMessage.author.avatar = msg.author.avatarURL({ extension: "png" });
 	}
 	bridgeMessage.author.username = msg.author.username;
 	bridgeMessage.author.discriminator = msg.author.discriminator;
@@ -172,15 +176,16 @@ async function qqMessageChainToBridgeMessageChain(
 ) {
 	for (const msg of chain) {
 		switch (msg.type) {
-		case "Source":
+		case "Source": {
 			bridgeMessage.from.qqMessageID = msg.id.toString();
 			break;
-		case "Quote":
+		}
+		case "Quote": {
 			if (quote) {
 				break;
 			}
 			const messageRepo = DatabaseService.connection.getRepository(BridgeMessageEntity);
-			const refMsg = await messageRepo.findOne({ qqMessageID: msg.id.toString() });
+			const refMsg = await messageRepo.findOne({ where: { qqMessageID: msg.id.toString() } });
 			bridgeMessage.quoteMessage = new BridgeMessage(refMsg.from);
 			// 尝试查找discord对应的qq消息id
 			if (refMsg) {
@@ -196,11 +201,13 @@ async function qqMessageChainToBridgeMessageChain(
 			bridgeMessage.quoteMessage.bridge = bridgeMessage.bridge;
 			await qqMessageChainToBridgeMessageChain(bridgeMessage.quoteMessage, msg.origin, true);
 			break;
-		case "Plain":
+		}
+		case "Plain": {
 			const atChain = parserQQMessage(msg.text);
 			bridgeMessage.chain.push(...atChain);
 			break;
-		case "At":
+		}
+		case "At": {
 			const memberInfo = (await BotService.qqBot.mirai.api.memberInfo(
 				bridgeMessage.bridge.qqGroup,
 				msg.target
@@ -208,13 +215,16 @@ async function qqMessageChainToBridgeMessageChain(
 			const atQq = MessageUtil.AtQQ(memberInfo.name, msg.target);
 			bridgeMessage.chain.push(atQq);
 			break;
-		case "AtAll":
+		}
+		case "AtAll": {
 			bridgeMessage.chain.push(MessageUtil.AtAll());
 			break;
-		case "Face":
+		}
+		case "Face": {
 			bridgeMessage.chain.push(MessageUtil.Plain(`QQ表情:[Face=${msg.faceId},${msg.name}]`));
 			break;
-		case "Image":
+		}
+		case "Image": {
 			const filePath = await download(msg.url);
 			const img = MessageUtil.Image(msg.url);
 			img.local = filePath;
@@ -229,8 +239,10 @@ async function qqMessageChainToBridgeMessageChain(
 			// 	messageContent += `> ${content.meta.detail_1.desc}\n`
 			// 	messageContent += `> ${content.meta.detail_1.qqdocurl}\n`
 			// 	break;
-		default:
+		}
+		default: {
 			bridgeMessage.chain.push(MessageUtil.Plain(JSON.stringify(msg)));
+		}
 		}
 	}
 }
@@ -256,14 +268,15 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
 		let quote: string;
 		for (const msg of bridgeMessage.chain) {
 			switch (msg.type) {
-			case "At":
+			case "At": {
 				if (msg.source === "QQ") {
 					chain.push(MiraiMessage.At(msg.qqNumber));
 				} else {
 					chain.push(MessageUtil.Plain(toBridgeUserName({ ...msg })));
 				}
 				break;
-			case "Image":
+			}
+			case "Image": {
 				if (msg.local) {
 					const relativePath = path.relative(
 						path.join(__dirname, "../mcl/data/net.mamoe.mirai-api-http/images"),
@@ -274,12 +287,15 @@ export async function bridgeSendQQ(bridgeMessage: BridgeMessage) {
 					chain.push(MiraiMessage.Image(null, msg.cache || msg.url));
 				}
 				break;
+			}
 			case "Plain":
-			case "AtAll":
+			case "AtAll": {
 				chain.push(msg);
 				break;
-			default:
+			}
+			default: {
 				chain.push(MessageUtil.Plain(JSON.stringify(msg)));
+			}
 			}
 		}
 		if (bridgeMessage.author.avatar) {
@@ -369,12 +385,13 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
 		return;
 	}
 	try {
-		const option: WebhookMessageOptions = {
+		const option: WebhookCreateMessageOptions = {
 			username: toBridgeUserName({ ...bridgeMessage.author, source: bridgeMessage.source }).replace(
 				/^@/,
 				""
 			),
 			avatarURL: bridgeMessage.author.avatar,
+			content: "",
 			files: [],
 			embeds: [],
 		};
@@ -387,22 +404,27 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
 		let messageContent = "";
 		for (const msg of bridgeMessage.chain) {
 			switch (msg.type) {
-			case "Plain":
+			case "Plain": {
 				messageContent += msg.text;
 				break;
-			case "At":
+			}
+			case "At": {
 				messageContent += await toDiscordAtUser(msg, webhook);
 				break;
-			case "Image":
+			}
+			case "Image": {
 				const url = msg.local || msg.cache || msg.url;
-				const attr = new MessageAttachment(url);
+				const attr = new AttachmentBuilder(url);
 				option.files.push(attr);
 				break;
-			case "AtAll":
+			}
+			case "AtAll": {
 				messageContent += "@everyone";
 				break;
-			default:
+			}
+			default: {
 				messageContent += JSON.stringify(msg);
+			}
 			}
 		}
 		// !直接回复
@@ -413,7 +435,7 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
 		// 	bridgeMessage.from.dcMessageID = resultMessage.id;
 		// }
 		// 使用embed回复
-		// const embed = new MessageEmbed({author: {name: '@[QQ] rabbitkiller(243249439)'}});
+		// const embed = new EmbedBuilder({author: {name: '@[QQ] rabbitkiller(243249439)'}});
 		// embed.description = messageContent;
 		// option.embeds.push(embed);
 		if (bridgeMessage.quoteMessage) {
@@ -426,27 +448,26 @@ export async function bridgeSendDiscord(bridgeMessage: BridgeMessage) {
 			};
 			messageContent = `> 回复 ${await toDiscordAtUser(at, webhook)} 的消息\n` + messageContent;
 		}
-		const resultMessage = (await webhook.send(messageContent, option)) as DiscordMessage;
+		option.content = messageContent;
+		const resultMessage = (await webhook.send(option)) as DiscordMessage;
 		bridgeMessage.from.dcMessageID = resultMessage.id;
 	} catch (err) {
 		log.error(err);
-		const option: WebhookMessageOptions = {
+		const webhook = await BotService.discord.fetchWebhook(
+			bridgeMessage.bridge.discord.id,
+			bridgeMessage.bridge.discord.token
+		);
+		const option: WebhookCreateMessageOptions = {
 			username: toBridgeUserName({ ...bridgeMessage.author, source: bridgeMessage.source }).replace(
 				/^@/,
 				""
 			),
 			avatarURL: bridgeMessage.author.avatar,
+			content: JSON.stringify(bridgeMessage.chain),
 			files: [],
 			embeds: [],
 		};
-		const webhook = await BotService.discord.fetchWebhook(
-			bridgeMessage.bridge.discord.id,
-			bridgeMessage.bridge.discord.token
-		);
-		const resultMessage = (await webhook.send(
-			JSON.stringify(bridgeMessage.chain),
-			option
-		)) as DiscordMessage;
+		const resultMessage = (await webhook.send(option)) as DiscordMessage;
 		bridgeMessage.from.dcMessageID = resultMessage.id;
 	}
 }
@@ -459,17 +480,21 @@ async function toDiscordQuoteMessage(
 	let messageContent = "";
 	for (const msg of bridgeMessage.chain) {
 		switch (msg.type) {
-		case "Plain":
+		case "Plain": {
 			messageContent += msg.text;
 			break;
-		case "At":
+		}
+		case "At": {
 			messageContent += `${await toDiscordAtUser(msg, webhook)}`;
 			break;
-		case "AtAll":
+		}
+		case "AtAll": {
 			messageContent += "\\@everyone";
 			break;
-		default:
+		}
+		default: {
 			messageContent += JSON.stringify(msg);
+		}
 		}
 	}
 	return messageContent
@@ -484,7 +509,7 @@ async function toDiscordQuoteMessage(
 async function toDiscordAtUser(at: At, webhook: DiscordWebhook): Promise<string> {
 	if (at.source === "DC") {
 		// 获取guild, 在通过guild获取所有用户
-		const guild: Guild = await BotService.discord.guilds.fetch(webhook.guildID);
+		const guild: Guild = await BotService.discord.guilds.fetch(webhook.guildId);
 		const fetchedMembers = await guild.members.fetch();
 		const member = fetchedMembers.find(
 			(member) =>
@@ -510,10 +535,11 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
 		// 处理消息
 		for (const msg of bridgeMessage.chain) {
 			switch (msg.type) {
-			case "Plain":
+			case "Plain": {
 				await insertKhlChain("plain", msg.text, chain);
 				break;
-			case "At":
+			}
+			case "At": {
 				if (msg.source === "KHL") {
 					const channel = await BotService.kaiheila.API.channel.view(
 						bridgeMessage.bridge.kaiheila.channelID
@@ -535,15 +561,19 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
 				}
 				await insertKhlChain("plain", toBridgeUserName(msg), chain);
 				break;
-			case "Image":
+			}
+			case "Image": {
 				const cache = await remoteImageToLocal(msg.url);
 				await insertKhlChain("image", cache, chain);
 				break;
-			case "AtAll":
+			}
+			case "AtAll": {
 				await insertKhlChain("plain", "(met)all(met)", chain);
 				break;
-			default:
+			}
+			default: {
 				await insertKhlChain("plain", JSON.stringify(msg), chain);
+			}
 			}
 		}
 		const avatar = await remoteImageToLocal(bridgeMessage.author.avatar);
@@ -595,7 +625,7 @@ export async function bridgeSendKaiheila(bridgeMessage: BridgeMessage) {
 			}
 
 			send().then(
-				() => {},
+				// () => {},
 				(err) => {
 					if (rei > 3) {
 						reject(err);
@@ -703,7 +733,7 @@ export function parserQQMessage(message: string): Array<At | Plain> {
 			ast.pop();
 		}
 	}
-	return ast as any;
+	return ast as any; // as any
 }
 
 /**
@@ -723,7 +753,7 @@ export async function parserDCMessage(
 		discordHere: bridgeRule.discordHere,
 		discordEmoji: bridgeRule.discordEmoji,
 		Plain: bridgeRule.Plain,
-	})(message) as Array<{ type: "discordUser" | "discordEmoji"; [prop: string]: any }>;
+	})(message) as Array<{ type: "discordUser" | "discordEmoji"; [prop: string]: unknown }>; // any
 	for (const node of ast) {
 		if (node.type === "discordEmoji") {
 			result.push(
@@ -737,7 +767,7 @@ export async function parserDCMessage(
 			);
 			result.push(MessageUtil.AtDC(user.username, user.discriminator));
 		} else {
-			result.push(node as any);
+			result.push(node as any); // as any
 		}
 	}
 	const length = result.length;
@@ -769,7 +799,7 @@ export function parserKHLMessage(message: string): Array<At | AtAll | Plain> {
 			ast.pop();
 		}
 	}
-	return ast as any;
+	return ast as any; // as any
 }
 
 /**

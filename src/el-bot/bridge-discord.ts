@@ -3,7 +3,7 @@ import { BridgeConfig } from "../interface";
 import config from "../config";
 import {
 	BridgeMessage,
-	bridgeSendDiscord,
+	// bridgeSendDiscord,
 	bridgeSendKaiheila,
 	bridgeSendQQ,
 	discordMessageToBridgeMessage,
@@ -27,7 +27,7 @@ export default async function bridgeDiscord() {
 		if (!bridge || bridge.enable === false) {
 			return;
 		}
-		const bridgeMessage = await discordMessageToBridgeMessage(msg);
+		const bridgeMessage: BridgeMessage = await discordMessageToBridgeMessage(msg);
 		bridgeMessage.bridge = bridge;
 		try {
 			await bridgeSendQQ(bridgeMessage);

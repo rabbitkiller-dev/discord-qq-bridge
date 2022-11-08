@@ -3,7 +3,7 @@ import { Message as MiraiMessage, MessageType } from "mirai-ts";
 import {
 	cacheDir,
 	download,
-	downloadImage,
+	// downloadImage,
 	imageDiscordAvatarCacheDir,
 } from "../utils/download-file";
 import { createCanvas, loadImage } from "canvas";
@@ -19,10 +19,12 @@ export const bridgeRule = {
 	atDC: {
 		order: 0,
 		match: (source) => /^@\[DC\] ([^\n#]+)#(\d\d\d\d)/.exec(source),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		parse: function (capture, parse, state) {
 			console.log(capture);
 			return { type: "At", source: "DC", username: capture[1], discriminator: capture[2] };
 		},
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		html: function (node, output, state) {
 			return "{{atDc}}";
 		},
@@ -30,27 +32,32 @@ export const bridgeRule = {
 	atKHL: {
 		order: 0,
 		match: (source) => /^@\[KHL\] ([^\n#]+)#(\d\d\d\d)/.exec(source),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		parse: function (capture, parse, state) {
 			console.log(capture);
 			return { type: "At", source: "KHL", username: capture[1], discriminator: capture[2] };
 		},
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		html: function (node, output, state) {
 			return "{{atDc}}";
 		},
 	},
 	atQQ: {
 		order: 0,
-		match: (source) => /^@\[QQ\] ([^\n]+)(?:\()([0-9]+)\)(\#0000)?/.exec(source),
+		match: (source) => /^@\[QQ\] ([^\n]+)(?:\()([0-9]+)\)(#0000)?/.exec(source),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		parse: function (capture, parse, state) {
 			console.log(capture);
 			return { type: "At", source: "QQ", username: capture[1], qqNumber: capture[2] };
 		},
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		html: function (node, output, state) {
 			return "{{atDc}}";
 		},
 	},
 	Plain: Object.assign({}, markdown.defaultRules.text, {
 		match: (source) => /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff-]|\n\n|\n|\w+:\S|$)/.exec(source),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		parse: function (capture, parse, state) {
 			return { type: "Plain", text: capture[0] };
 		},
@@ -179,6 +186,6 @@ export async function remoteImageToLocal(avatar: string, useCache = true): Promi
 		json: { url: avatar, useCache: useCache },
 		responseType: "json",
 	});
-	const body: { data: string } = result.body as any;
+	const body: { data: string } = result.body as { data: string; }; // as any
 	return body.data;
 }

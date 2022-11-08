@@ -1,23 +1,27 @@
 import { BotService } from "./bot.service";
 import * as log from "../utils/log5";
-import * as miraiTs from "mirai-ts";
-import * as KaiheilaBotRoot from "kaiheila-bot-root";
+// import * as miraiTs from "mirai-ts";
+// import * as KaiheilaBotRoot from "kaiheila-bot-root";
 import { BridgeConfig } from "../interface";
 import config from "../config";
-import { Message as DiscordMessage, WebhookMessageOptions } from "discord.js";
-import { Message as MiraiMessage, MessageType } from "mirai-ts";
-import { KaiheilaAllMessage } from "./interface";
+// import { Message as DiscordMessage } from "discord.js";
+// import { Message as MiraiMessage } from "mirai-ts";
+import type { MessageType } from "mirai-ts";
+// import { KaiheilaAllMessage } from "./interface";
 import {
 	bridgeSendDiscord,
 	bridgeSendKaiheila,
-	bridgeSendQQ,
-	discordMessageToBridgeMessage,
+	// bridgeSendQQ,
+	// discordMessageToBridgeMessage,
 	qqMessageToBridgeMessage,
 	saveBridgeMessage,
 } from "./message-util";
 
 export default async function bridgeQq() {
-	BotService.qqBot.mirai.on("GroupMessage", async (qqMsg: MessageType.GroupMessage) => {
+	BotService.qqBot.mirai.on("GroupMessage", async (qqMsg: MessageType.GroupMessage ) => {
+		if (qqMsg.type !== 'GroupMessage') {
+			return;
+		}
 		// 查询这个频道是否需要通知到群
 		const bridge: BridgeConfig = config.bridges.find((b) => b.qqGroup === qqMsg.sender.group.id);
 		if (!bridge || bridge.enable === false) {

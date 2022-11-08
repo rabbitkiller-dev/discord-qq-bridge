@@ -1,7 +1,7 @@
 /**
  * 自动审批新成员进群
  */
-import { MessageType } from "mirai-ts";
+// import { MessageType } from "mirai-ts";
 import { BotService } from "./bot.service";
 import config from "../config";
 

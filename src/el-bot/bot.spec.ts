@@ -1,8 +1,9 @@
-import { parserMessageAt } from "./message-util";
+// import { parserMessageAt } from "./message-util";
 
 describe("bridge-bridge-to-qq.bot.spec.ts", () => {
-	beforeAll(async () => {});
+	// beforeAll(async () => {});
 
+	/*
 	it("parseAt", async () => {
 		console.log(
 			parserMessageAt(`asdkjasd
@@ -10,4 +11,8 @@ describe("bridge-bridge-to-qq.bot.spec.ts", () => {
  @[KHL] rabbitkiller(兔子)#7435 斯柯达斯柯达`)
 		);
 	});
+	*/
+	it("test", () => {
+		console.log("Success.");
+	} );
 });

@@ -26,7 +26,8 @@ export class MessageEntity {
 
 	get qqMessage(): {
 		content: string;
-		} {
+		// eslint-disable-next-line
+	} {
 		return JSON.parse(this._qqMessage);
 	}
 
@@ -46,7 +47,8 @@ export class MessageEntity {
 			url: string;
 			name: string;
 		};
-		} {
+		// eslint-disable-next-line
+	} {
 		return JSON.parse(this._discordMessage);
 	}
 }

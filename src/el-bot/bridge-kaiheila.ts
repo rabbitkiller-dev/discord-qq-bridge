@@ -1,11 +1,11 @@
 import { BotService } from "./bot.service";
 import * as log from "../utils/log5";
-import * as miraiTs from "mirai-ts";
-import * as KaiheilaBotRoot from "kaiheila-bot-root";
+// import * as miraiTs from "mirai-ts";
+// import * as KaiheilaBotRoot from "kaiheila-bot-root";
 import { BridgeConfig } from "../interface";
 import config from "../config";
-import { Message as DiscordMessage, WebhookMessageOptions } from "discord.js";
-import { Message as MiraiMessage, MessageType } from "mirai-ts";
+// import { Message as DiscordMessage } from "discord.js";
+// import { Message as MiraiMessage, MessageType } from "mirai-ts";
 import { KaiheilaAllMessage } from "./interface";
 import {
 	BridgeMessage,
@@ -27,7 +27,7 @@ export default async function bridgeKai() {
 		if (!bridge || bridge.enable === false) {
 			return;
 		}
-		const bridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);
+		const bridgeMessage: BridgeMessage = await kaiheilaMessageToBridgeMessage(allMessage);
 		bridgeMessage.bridge = bridge;
 		try {
 			await bridgeSendDiscord(bridgeMessage);

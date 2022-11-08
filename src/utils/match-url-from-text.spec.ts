@@ -1,8 +1,8 @@
 import { MatchUrlFromText } from "./match-url-from-text";
-import { longUrlIntoShotUrl } from "./longurl-into-shoturl";
+// import { longUrlIntoShotUrl } from "./longurl-into-shoturl";
 
 describe("match-url-from-text.ts", () => {
-	beforeAll(async () => {});
+	// beforeAll(async () => {});
 	it("从文本获取url", async () => {
 		expect(
 			MatchUrlFromText(`[Discord] @カノープス・カリーナ#8351
