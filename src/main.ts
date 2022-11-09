@@ -9,7 +9,6 @@ import bridgeQq from "./el-bot/bridge-qq";
 import bridgeDiscord from "./el-bot/bridge-discord";
 import bridgeKai from "./el-bot/bridge-kaiheila";
 
-
 async function main() {
 	await DatabaseService.init();
 	log.message("🌈", "数据库连接成功");

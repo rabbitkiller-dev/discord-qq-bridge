@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Redirect, Req, Request, Res } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Post,
+	Redirect,
+	Req,
+	Request,
+	Res,
+} from "@nestjs/common";
 import { Response } from "express";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DToQUserLimitEntity } from "../entity/dToQ-user-limit.entity";
@@ -12,16 +23,17 @@ import { Collection, Snowflake, Webhook } from "discord.js";
 
 @Controller("/api/bridge")
 export class BridgeController {
-	constructor(@InjectRepository(DToQUserLimitEntity)
-	private dToQUserLimitRepository: Repository<DToQUserLimitEntity>) {
-	}
+	constructor(
+		@InjectRepository(DToQUserLimitEntity)
+		private dToQUserLimitRepository: Repository<DToQUserLimitEntity>
+	) {}
 
 	/**
 	 * 获取服务器配置
 	 */
 	@Get("config")
 	getBridgeConfig(@Res() res: Response) {
-		res.status(200).json({data: config});
+		res.status(200).json({ data: config });
 	}
 
 	/**
@@ -31,8 +43,11 @@ export class BridgeController {
 	saveBridgeConfig(@Body() body: Config, @Res() res: Response) {
 		config.autoApproveQQGroup = body.autoApproveQQGroup;
 		config.bridges = body.bridges;
-		fs.writeFileSync(path.join(__dirname, "../../config.json"), JSON.stringify(config, undefined, "	"));
-		res.status(200).json({data: config});
+		fs.writeFileSync(
+			path.join(__dirname, "../../config.json"),
+			JSON.stringify(config, undefined, "	")
+		);
+		res.status(200).json({ data: config });
 	}
 
 	/**
@@ -40,11 +55,11 @@ export class BridgeController {
 	 */
 	@Get("guilds")
 	getAllGuilds(@Res() res: Response) {
-		const channels: Array<{ id: string, name: string }> = [];
+		const channels: Array<{ id: string; name: string }> = [];
 		BotService.discord.guilds.cache.forEach((value, key, map) => {
-			channels.push({id: key, name: value.name});
+			channels.push({ id: key, name: value.name });
 		});
-		res.status(200).json({data: channels});
+		res.status(200).json({ data: channels });
 	}
 
 	/**
@@ -52,11 +67,11 @@ export class BridgeController {
 	 */
 	@Get("guilds/:guildID/channels")
 	async getAllChannels(@Param("guildID") guildID: string, @Res() res: Response) {
-		const channels: Array<{ id: string, name: string }> = [];
+		const channels: Array<{ id: string; name: string }> = [];
 		BotService.discord.guilds.cache.get(guildID).channels.cache.forEach((value, key, map) => {
-			channels.push({id: key, name: value.name});
+			channels.push({ id: key, name: value.name });
 		});
-		res.status(200).json({data: channels});
+		res.status(200).json({ data: channels });
 	}
 
 	/**
@@ -64,12 +79,17 @@ export class BridgeController {
 	 */
 	@Get("guilds/:guildID/users")
 	async getAllUsers(@Param("guildID") guildID: string, @Res() res: Response) {
-		const users: Array<{ id: string, username: string, discriminator: string, bot: boolean }> = [];
+		const users: Array<{ id: string; username: string; discriminator: string; bot: boolean }> = [];
 		const fetchedMembers = await BotService.discord.guilds.cache.get(guildID).members.fetch();
 		BotService.discord.guilds.cache.get(guildID).members.cache.forEach((value, key, map) => {
-			users.push({id: key, username: value.user.username, discriminator: value.user.discriminator, bot: value.user.bot});
+			users.push({
+				id: key,
+				username: value.user.username,
+				discriminator: value.user.discriminator,
+				bot: value.user.bot,
+			});
 		});
-		res.status(200).json({data: users});
+		res.status(200).json({ data: users });
 	}
 
 	/**
@@ -77,8 +97,8 @@ export class BridgeController {
 	 */
 	@Get("guilds/:guildID/DToQUserLimit")
 	async getAllDToQUserLimit(@Param("guildID") guildID: string, @Res() res: Response) {
-		const results = await this.dToQUserLimitRepository.find({guild: guildID});
-		res.status(200).json({data: results});
+		const results = await this.dToQUserLimitRepository.find({ guild: guildID });
+		res.status(200).json({ data: results });
 	}
 
 	/**
@@ -87,7 +107,7 @@ export class BridgeController {
 	@Post("DToQUserLimit")
 	async postAllDToQUserLimit(@Body() body: DToQUserLimitEntity, @Res() res: Response) {
 		const result = await this.dToQUserLimitRepository.save(body);
-		res.status(200).json({data: result});
+		res.status(200).json({ data: result });
 	}
 
 	/**
@@ -96,13 +116,13 @@ export class BridgeController {
 	@Delete("DToQUserLimit/:id")
 	async deleteAllDToQUserLimit(@Param("id") id: string, @Res() res: Response) {
 		const result = await this.dToQUserLimitRepository.delete(id);
-		res.status(200).json({data: result});
+		res.status(200).json({ data: result });
 	}
 
 	@Get("discordAllGuildAndChannelsInfo")
 	async getDiscordAllGuildAndChannelsInfo(@Res() res: Response) {
 		const result: DiscordAllInfo = {
-			guild: []
+			guild: [],
 		};
 		const guildList = BotService.discord.guilds.cache.array();
 		for (const guild of guildList) {
@@ -114,7 +134,7 @@ export class BridgeController {
 			const channels = [];
 			BotService.discord.guilds.cache.get(guild.id).channels.cache.forEach((value, key, map) => {
 				if (value.type === "text") {
-					channels.push({id: key, name: value.name});
+					channels.push({ id: key, name: value.name });
 				}
 			});
 			result.guild.push({
@@ -123,11 +143,11 @@ export class BridgeController {
 				channels,
 				hasManageWebhooks,
 				webhooks: webhooks.array().map((webhook) => {
-					return {id: webhook.id, name: webhook.name, token: webhook.token};
-				})
+					return { id: webhook.id, name: webhook.name, token: webhook.token };
+				}),
 			});
 		}
-		res.status(200).json({data: result});
+		res.status(200).json({ data: result });
 	}
 
 	@Get("khlAllInfo")
@@ -139,19 +159,19 @@ export class BridgeController {
 		for (const guild of guildList.items) {
 			const channelList = await await BotService.kaiheila.API.channel.list(guild.id);
 			const channels = [];
-			channelList.items.forEach(channel => {
+			channelList.items.forEach((channel) => {
 				if (channel.type !== 1 || channel.isCategory) {
 					return;
 				}
-				channels.push({id: channel.id, name: channel.name});
+				channels.push({ id: channel.id, name: channel.name });
 			});
 			result.guild.push({
 				id: guild.id,
 				name: guild.name,
-				channels
+				channels,
 			});
 		}
-		res.status(200).json({data: result});
+		res.status(200).json({ data: result });
 	}
 
 	@Get("qqAllInfo")
@@ -168,28 +188,28 @@ export class BridgeController {
 			});
 		});
 
-		res.status(200).json({data: result});
+		res.status(200).json({ data: result });
 	}
 }
 
 interface QQAllInfo {
-	group: Array<{ id: number, name: string }>
+	group: Array<{ id: number; name: string }>;
 }
 
 interface KHLAllInfo {
 	guild: Array<{
-		id: string,
-		name: string
-		channels: Array<{ id: string, name: string }>
+		id: string;
+		name: string;
+		channels: Array<{ id: string; name: string }>;
 	}>;
 }
 
 interface DiscordAllInfo {
 	guild: Array<{
-		id: string,
-		name: string
-		channels: Array<{ id: string, name: string }>;
+		id: string;
+		name: string;
+		channels: Array<{ id: string; name: string }>;
 		hasManageWebhooks: boolean;
-		webhooks: Array<{ id: string, name: string, token: string }>
+		webhooks: Array<{ id: string; name: string; token: string }>;
 	}>;
 }

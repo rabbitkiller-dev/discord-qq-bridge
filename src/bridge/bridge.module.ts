@@ -5,7 +5,6 @@ import { DToQUserLimitEntity } from "../entity/dToQ-user-limit.entity";
 
 @Module({
 	imports: [TypeOrmModule.forFeature([DToQUserLimitEntity])],
-	controllers: [BridgeController]
+	controllers: [BridgeController],
 })
-export class BridgeModule {
-}
+export class BridgeModule {}

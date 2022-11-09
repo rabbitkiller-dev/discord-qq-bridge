@@ -8,11 +8,12 @@ import { Message as DiscordMessage, WebhookMessageOptions } from "discord.js";
 import { Message as MiraiMessage, MessageType } from "mirai-ts";
 import { KaiheilaAllMessage } from "./interface";
 import {
-	BridgeMessage, bridgeSendDiscord,
+	BridgeMessage,
+	bridgeSendDiscord,
 	bridgeSendQQ,
-	kaiheilaMessageToBridgeMessage, saveBridgeMessage,
+	kaiheilaMessageToBridgeMessage,
+	saveBridgeMessage,
 } from "./message-util";
-
 
 export default async function bridgeKai() {
 	BotService.kaiheila.on("allMessages", async (allMessage: KaiheilaAllMessage) => {
@@ -20,7 +21,9 @@ export default async function bridgeKai() {
 			return;
 		}
 		// 查询这个频道是否需要通知到群
-		const bridge: BridgeConfig = config.bridges.find((opt) => opt.kaiheila?.channelID === allMessage.data.channelId);
+		const bridge: BridgeConfig = config.bridges.find(
+			(opt) => opt.kaiheila?.channelID === allMessage.data.channelId
+		);
 		if (!bridge || bridge.enable === false) {
 			return;
 		}
@@ -41,4 +44,3 @@ export default async function bridgeKai() {
 		await saveBridgeMessage(bridgeMessage);
 	});
 }
-

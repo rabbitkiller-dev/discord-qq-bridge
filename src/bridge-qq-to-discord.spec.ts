@@ -1,12 +1,9 @@
-import bridgeDiscordToQQ, {handlerAt, parseEmoji} from "./bridge-discord-to-qq.el";
+import bridgeDiscordToQQ, { handlerAt, parseEmoji } from "./bridge-discord-to-qq.el";
 
 describe("bridge-bridge-to-qq.bot.spec.ts", () => {
-	beforeAll(async ()=>{
-	});
-	it("parseEmoji", async () => {
-	});
-	it("handlerAt", async () => {
-	});
+	beforeAll(async () => {});
+	it("parseEmoji", async () => {});
+	it("handlerAt", async () => {});
 	it("handlerAtDiscordUser", async () => {
 		const matchs = `[Discord] @カノープス・カリーナ#8351
     @rabbitkiller#1234 @没有RE0看【#1234

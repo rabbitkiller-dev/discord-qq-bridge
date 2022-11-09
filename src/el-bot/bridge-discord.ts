@@ -2,21 +2,28 @@ import { BotService } from "./bot.service";
 import { BridgeConfig } from "../interface";
 import config from "../config";
 import {
-	BridgeMessage, bridgeSendDiscord, bridgeSendKaiheila,
+	BridgeMessage,
+	bridgeSendDiscord,
+	bridgeSendKaiheila,
 	bridgeSendQQ,
-	discordMessageToBridgeMessage, saveBridgeMessage,
+	discordMessageToBridgeMessage,
+	saveBridgeMessage,
 } from "./message-util";
 import * as log from "../utils/log5";
-
 
 export default async function bridgeDiscord() {
 	BotService.discord.on("message", async (msg) => {
 		// 无视自己的消息
-		if (msg.author.id === config.discordBot || (config.bridges.find(opt => opt.discord.id === msg.author.id))) {
+		if (
+			msg.author.id === config.discordBot ||
+			config.bridges.find((opt) => opt.discord.id === msg.author.id)
+		) {
 			return;
 		}
 		// 查询这个频道是否需要通知到群
-		const bridge: BridgeConfig = config.bridges.find((opt) => opt.discord.channelID === msg.channel.id);
+		const bridge: BridgeConfig = config.bridges.find(
+			(opt) => opt.discord.channelID === msg.channel.id
+		);
 		if (!bridge || bridge.enable === false) {
 			return;
 		}

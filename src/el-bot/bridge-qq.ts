@@ -8,15 +8,18 @@ import { Message as DiscordMessage, WebhookMessageOptions } from "discord.js";
 import { Message as MiraiMessage, MessageType } from "mirai-ts";
 import { KaiheilaAllMessage } from "./interface";
 import {
-	bridgeSendDiscord, bridgeSendKaiheila, bridgeSendQQ,
-	discordMessageToBridgeMessage, qqMessageToBridgeMessage, saveBridgeMessage,
+	bridgeSendDiscord,
+	bridgeSendKaiheila,
+	bridgeSendQQ,
+	discordMessageToBridgeMessage,
+	qqMessageToBridgeMessage,
+	saveBridgeMessage,
 } from "./message-util";
-
 
 export default async function bridgeQq() {
 	BotService.qqBot.mirai.on("GroupMessage", async (qqMsg: MessageType.GroupMessage) => {
 		// 查询这个频道是否需要通知到群
-		const bridge: BridgeConfig = config.bridges.find(b => b.qqGroup === qqMsg.sender.group.id);
+		const bridge: BridgeConfig = config.bridges.find((b) => b.qqGroup === qqMsg.sender.group.id);
 		if (!bridge || bridge.enable === false) {
 			return;
 		}

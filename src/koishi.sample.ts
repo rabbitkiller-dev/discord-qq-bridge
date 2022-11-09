@@ -18,8 +18,8 @@ export default {
 				token: "", // 频道webhook token
 				channelID: "", // 频道id
 			},
-			qqGroup: 0 // q群
-		}
+			qqGroup: 0, // q群
+		},
 	],
 	// 代理地址
 	proxy: "",

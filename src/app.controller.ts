@@ -6,13 +6,16 @@ import { assetsCacheDir, download } from "./utils/download-file";
 
 @Controller()
 export class AppController {
-	constructor(private readonly appService: AppService) {
-	}
+	constructor(private readonly appService: AppService) {}
 
 	@Post("/api/remoteImageToLocal")
-	async remoteImageToLocal(@Body() body: { url: string, useCache: boolean }, @Res() res: Response) {
+	async remoteImageToLocal(@Body() body: { url: string; useCache: boolean }, @Res() res: Response) {
 		const filepath = await download(body.url, body.useCache);
-		res.status(200).json({data: filepath.replace(assetsCacheDir, `${config.myDomainName}/api/cache`).replace(/\\/g, "/")});
+		res.status(200).json({
+			data: filepath
+				.replace(assetsCacheDir, `${config.myDomainName}/api/cache`)
+				.replace(/\\/g, "/"),
+		});
 	}
 
 	@Get("/api/cache/**")

@@ -51,7 +51,6 @@ function AtAll(): AtAll {
 	};
 }
 
-
 /**
  * 生成文本消息格式
  * @param text 文本

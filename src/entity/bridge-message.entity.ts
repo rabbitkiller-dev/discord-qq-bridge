@@ -3,20 +3,20 @@ import { SingleMessage } from "../el-bot/interface";
 
 @Entity()
 export class BridgeMessageEntity {
-  @PrimaryGeneratedColumn("uuid")
-  id: number;
+	@PrimaryGeneratedColumn("uuid")
+		id: number;
 
-  @Column({nullable: true})
-  qqMessageID: string;
+	@Column({ nullable: true })
+		qqMessageID: string;
 
-  @Column({nullable: true})
-  dcMessageID: string;
+	@Column({ nullable: true })
+		dcMessageID: string;
 
-  @Column({nullable: true})
-  khlMessageID: string;
+	@Column({ nullable: true })
+		khlMessageID: string;
 
-  @Column()
-  from: "QQ" | "KHL" | "DC";
+	@Column()
+		from: "QQ" | "KHL" | "DC";
 
 	// @Column({type: 'json'})
 	// dcMessageContent: SingleMessage[] = [];

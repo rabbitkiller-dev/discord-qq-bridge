@@ -11,14 +11,13 @@ class _ElAndDiscordService {
 	qqBot: Bot;
 	kaiheila: BotInstance & KaiheilaBotInterface;
 
-	constructor() {
-	}
+	constructor() {}
 
 	async initQQBot() {
-		const qqBot = this.qqBot = new Bot({
+		const qqBot = (this.qqBot = new Bot({
 			qq: config.qqBot,
 			setting: config.setting,
-		} as any);
+		} as any));
 		return await qqBot.start();
 	}
 
@@ -30,15 +29,17 @@ class _ElAndDiscordService {
 				"GUILD_WEBHOOKS",
 				"GUILD_MEMBERS", // lets you request guild members (i.e. fixes the issue)
 			]);
-			const discord = this.discord = new Client({ws: {intents}});
+			const discord = (this.discord = new Client({ ws: { intents } }));
 
 			function loginDiscord() {
-				discord.login(config.discordBotToken).then(() => {
-				}, (err) => {
-					log.message(err);
-					log.message("🌈", "Discord 连接失败, 重新连接...");
-					loginDiscord();
-				});
+				discord.login(config.discordBotToken).then(
+					() => {},
+					(err) => {
+						log.message(err);
+						log.message("🌈", "Discord 连接失败, 重新连接...");
+						loginDiscord();
+					}
+				);
 			}
 
 			discord.once("ready", () => {
@@ -49,11 +50,15 @@ class _ElAndDiscordService {
 	}
 
 	async initKaiheila() {
-		return new Promise(((resolve, reject) => {
-			const bot = this.kaiheila = new KaiheilaBotRoot.KaiheilaBot({mode: "websocket", token: config.kaiheilaBotToken, ignoreDecryptError: false});
+		return new Promise((resolve, reject) => {
+			const bot = (this.kaiheila = new KaiheilaBotRoot.KaiheilaBot({
+				mode: "websocket",
+				token: config.kaiheilaBotToken,
+				ignoreDecryptError: false,
+			}));
 			bot.connect();
 			resolve(this.kaiheila);
-		}));
+		});
 	}
 }
 

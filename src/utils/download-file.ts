@@ -37,7 +37,9 @@ async function initCache() {
 export async function download(url: string, useCache = true): Promise<string> {
 	await initCache();
 	const fileMD5Name = md5(url);
-	const isExists = fs.readdirSync(assetsCacheDir).find((file) => file.startsWith(`${fileMD5Name}.`));
+	const isExists = fs
+		.readdirSync(assetsCacheDir)
+		.find((file) => file.startsWith(`${fileMD5Name}.`));
 	if (isExists && useCache) {
 		return path.join(assetsCacheDir, isExists);
 	}
@@ -50,8 +52,8 @@ export async function download(url: string, useCache = true): Promise<string> {
 }
 
 // 下载文件并缓存
-export async function downloadImage(params: { url: string, isCache?: boolean }): Promise<string> {
-	params = Object.assign({isCache: true}, params);
+export async function downloadImage(params: { url: string; isCache?: boolean }): Promise<string> {
+	params = Object.assign({ isCache: true }, params);
 	await initCache();
 	const filename = path.basename(params.url);
 	const localPath = path.join(imageCacheDir, filename);
@@ -59,18 +61,21 @@ export async function downloadImage(params: { url: string, isCache?: boolean }):
 		return Promise.resolve(localPath);
 	}
 	return new Promise((resolve, reject) => {
-		request.defaults({proxy: config.proxy, timeout: 60000})
+		request
+			.defaults({ proxy: config.proxy, timeout: 60000 })
 			.get(params.url)
 			.on("response", function (response) {
 				if (response.statusCode !== 200) {
 					reject(`下载失败,请检查网络或代理${response.statusCode}:${params.url}`);
 				}
 				const stream = fs.createWriteStream(localPath);
-				response.on("data", (chunk) => {
-					stream.write(chunk);
-				}).on("end", () => {
-					stream.close();
-				});
+				response
+					.on("data", (chunk) => {
+						stream.write(chunk);
+					})
+					.on("end", () => {
+						stream.close();
+					});
 				stream.on("close", () => {
 					resolve(localPath);
 				});
@@ -79,15 +84,16 @@ export async function downloadImage(params: { url: string, isCache?: boolean }):
 				reject(err);
 			});
 	});
-
 }
 
 // 下载qq图片并缓存
-export async function downloadQQImage(params: { url: string, cache?: boolean }): Promise<string> {
-	params = Object.assign({cache: true}, params);
+export async function downloadQQImage(params: { url: string; cache?: boolean }): Promise<string> {
+	params = Object.assign({ cache: true }, params);
 	await initCache();
 	const fileMD5Name = md5(params.url);
-	const isExists = fs.readdirSync(imageQQEmojiCacheDir).find((file) => file.startsWith(fileMD5Name));
+	const isExists = fs
+		.readdirSync(imageQQEmojiCacheDir)
+		.find((file) => file.startsWith(fileMD5Name));
 	if (isExists && params.cache) {
 		return path.join(imageQQEmojiCacheDir, isExists);
 	}
@@ -97,17 +103,25 @@ export async function downloadQQImage(params: { url: string, cache?: boolean }):
 	const localPath = path.join(imageQQEmojiCacheDir, filename);
 	const writeStream = fs.createWriteStream(localPath);
 	return new Promise((resolve, reject) => {
-		got.stream(params.url).pipe(writeStream).on("close", () => {
-			resolve(localPath);
-		});
+		got
+			.stream(params.url)
+			.pipe(writeStream)
+			.on("close", () => {
+				resolve(localPath);
+			});
 	});
 }
 // 下载discord附件并缓存
-export async function downloadDiscordAttachment(params: { url: string, cache?: boolean }): Promise<string> {
-	params = Object.assign({cache: true}, params);
+export async function downloadDiscordAttachment(params: {
+	url: string;
+	cache?: boolean;
+}): Promise<string> {
+	params = Object.assign({ cache: true }, params);
 	await initCache();
 	const fileMD5Name = md5(params.url);
-	const isExists = fs.readdirSync(imageDiscordAttachmentCacheDir).find((file) => file.startsWith(fileMD5Name));
+	const isExists = fs
+		.readdirSync(imageDiscordAttachmentCacheDir)
+		.find((file) => file.startsWith(fileMD5Name));
 	if (isExists && params.cache) {
 		return path.join(imageDiscordAttachmentCacheDir, isExists);
 	}
@@ -116,18 +130,21 @@ export async function downloadDiscordAttachment(params: { url: string, cache?: b
 	const writeStream = fs.createWriteStream(localPath);
 
 	return new Promise((resolve, reject) => {
-		request.defaults({proxy: config.proxy, timeout: 60000})
+		request
+			.defaults({ proxy: config.proxy, timeout: 60000 })
 			.get(params.url)
 			.on("response", function (response) {
 				if (response.statusCode !== 200) {
 					reject(`下载失败,请检查网络或代理${response.statusCode}:${params.url}`);
 				}
-				response.on("data", (chunk) => {
-					writeStream.write(chunk);
-				}).on("end", () => {
-					writeStream.close();
-					resolve(localPath);
-				});
+				response
+					.on("data", (chunk) => {
+						writeStream.write(chunk);
+					})
+					.on("end", () => {
+						writeStream.close();
+						resolve(localPath);
+					});
 			})
 			.on("error", function (err) {
 				reject(err);

@@ -25,7 +25,7 @@ export function log5(type, ...messages) {
 		} else if (typeof i === "object") {
 			try {
 				texts.push(JSON.stringify(i));
-			} catch (e) { }
+			} catch (e) {}
 		} else {
 			texts.push(String(i));
 		}

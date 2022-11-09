@@ -7,7 +7,7 @@ import config from "../config";
 
 export async function autoApproveQQGroup() {
 	BotService.qqBot.mirai.on("MemberJoinRequestEvent", (data) => {
-		const flag = config.autoApproveQQGroup.find(s => s.qqGroup === data.groupId);
+		const flag = config.autoApproveQQGroup.find((s) => s.qqGroup === data.groupId);
 		// 判断有没有配置自动审批
 		if (!flag) {
 			return;
