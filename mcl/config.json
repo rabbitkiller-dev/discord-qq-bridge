@@ -15,21 +15,21 @@
     {
       "id": "net.mamoe:mirai-console",
       "channel": "stable",
-      "version": "2.7.1",
+      "version": "2.10.1",
       "type": "libs",
       "versionLocked": false
     },
     {
       "id": "net.mamoe:mirai-console-terminal",
       "channel": "stable",
-      "version": "2.7.1",
+      "version": "2.10.1",
       "type": "libs",
       "versionLocked": false
     },
     {
       "id": "net.mamoe:mirai-core-all",
       "channel": "stable",
-      "version": "2.7.1",
+      "version": "2.10.1",
       "type": "libs",
       "versionLocked": false
     },
