@@ -33,6 +33,7 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# discord-qq-bridge
 go-cqhttp
 
 /cache
@@ -44,3 +45,4 @@ go-cqhttp
 /src/el.config.ts
 /src/el.config.prod.ts
 /mcl/bots/
+/mcl/config/
