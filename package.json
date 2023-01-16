@@ -65,7 +65,7 @@
     "mirai-ts": "^2.4.3",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
-    "rimraf": "^3.0.2",
+    "rimraf": "^4.0.7",
     "rxjs": "^7.6.0",
     "shortid": "^2.2.16",
     "sqlite3": "^5.1.2",
