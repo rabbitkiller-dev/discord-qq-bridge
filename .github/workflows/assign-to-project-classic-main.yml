@@ -1,0 +1,26 @@
+name: Assign to Project (classic) MAIN
+on:
+  issue_comment:
+    types: [ created ]
+  issues:
+    types: [ opened ]
+  pull_request:
+    types: [ opened ]
+  pull_request_target:
+    types: [ opened ]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  assign-project-main:
+    runs-on: ubuntu-latest
+    name: Assign to Project
+    steps:
+    - name: Assign new issues and new pull requests to project MAIN
+      uses: srggrs/assign-one-project-github-action@1.3.1
+      if: |
+        github.event.action == 'created' ||
+        github.event.action == 'opened' ||
+        github.event.action == 'reopened'
+      with:
+        project: 'https://github.com/rabbitkiller-dev/discord-qq-bridge/projects/1'
+        column_name: 'Backlog'
