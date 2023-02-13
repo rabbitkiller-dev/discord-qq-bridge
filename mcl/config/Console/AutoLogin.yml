@@ -7,9 +7,10 @@ accounts:
       # 密码内容, PLAIN 时为密码文本, MD5 时为 16 进制
       value: pwd
     # 账号配置. 可用配置列表 (注意大小写):
-    # "protocol": "ANDROID_PHONE" / "ANDROID_PAD" / "ANDROID_WATCH" /"MAC" / "IPAD"
+    # "protocol": "ANDROID_PHONE" / "ANDROID_PAD" / "ANDROID_WATCH" / "MACOS" / "IPAD"
     # "device": "device.json"
     # "enable": true
+    # "heartbeatStrategy": "STAT_HB" / "REGISTER" / "NONE"
     configuration: 
       protocol: ANDROID_PHONE
       device: device.json

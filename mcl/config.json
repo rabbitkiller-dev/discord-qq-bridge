@@ -1,6 +1,6 @@
 {
   "js_optimization_level": -1,
-  "mirai_repo": "https://gitee.com/peratx/mirai-repo/raw/master",
+  "mirai_repo": "https://repo.mirai.mamoe.net/keep/mcl",
   "maven_repo": [
     "https://maven.aliyun.com/repository/public"
   ],
@@ -15,21 +15,21 @@
     {
       "id": "net.mamoe:mirai-console",
       "channel": "stable",
-      "version": "2.10.1",
+      "version": "2.12.3",
       "type": "libs",
       "versionLocked": false
     },
     {
       "id": "net.mamoe:mirai-console-terminal",
       "channel": "stable",
-      "version": "2.10.1",
+      "version": "2.12.3",
       "type": "libs",
       "versionLocked": false
     },
     {
       "id": "net.mamoe:mirai-core-all",
       "channel": "stable",
-      "version": "2.10.1",
+      "version": "2.12.3",
       "type": "libs",
       "versionLocked": false
     },
