@@ -1,3 +1,6 @@
+# 声明
+此项目已不在维护, 想使用请稳步到: https://github.com/rabbitkiller-dev/message_bridge_rs
+
 # discord-qq-bridge
 
 ## 前置说明
